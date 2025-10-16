@@ -1,0 +1,75 @@
+.add-customer{
+  min-width: 5ch;
+  max-width: 20ch;
+  padding: 0.7em;
+  background: #006599;
+  color: #fff;
+  border: none;
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1rem;
+  border-radius: 15px;
+}
+
+table{
+    margin-top: 1em;
+    max-height: 30ch;
+    overflow-y: auto;
+}
+.table-header{
+    background-color: #006599;
+}
+.table-header th{
+    text-align: left;
+    color: white;
+    font-weight: 600;
+    padding: 0.7em 1em;
+}
+
+.table-body td{
+    text-align: left;
+    font-weight: 500;
+    padding: 0.7em 1em;
+}
+
+.table-body td:nth-child(3){
+    color: #006599;
+    font-weight: 600;
+}
+
+.table-body .buttons{
+    display: inline-flex;
+    flex-direction: row;
+    gap: 1em;
+}
+
+.table-body .buttons button{
+    border: none;
+    font-family: Poppins, sans-serif;
+    border-radius: 5px;
+    padding: 0.3em 1em;
+    cursor: pointer;
+}
+.default-container .header-buttons{
+    display: flex;
+    flex-direction: row;
+}
+.default-container .header-buttons button{
+    border: none;
+    background: #006599;
+    padding: 0.7em;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: Poppins, sans-serif;
+}
+.default-container .header-buttons button:last-child{
+    margin-left: auto;
+}
+.table-body .buttons .edit{
+    background-color: #4CAF50;
+}
+
+.table-body .buttons .remove{
+    background-color: #FF4D4D;
+}

@@ -1,13 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import Login from './pages/Login'
+import { Routes, Route, Navigate } from "react-router-dom";
+import DashboardLayout from "./components/layout/DashboardLayout";
 
-function App() {
+// pages
+import Login from "./pages/Login";
+import Customers from "./pages/Customers";
+import Inventory from "./pages/Inventory";
+import Menu from "./pages/Menu";
+import Pos from "./pages/Pos";
+import Admin from "./pages/Admin";
+
+export default function App() {
   return (
-    <Login />
+    <Routes>
+      {/* public */}
+      <Route path="/login" element={<Login />} />
+
+      {/* dashboard menu*/}
+      <Route element={<DashboardLayout />}>
+        <Route index element={<Pos />} />              
+        <Route path="pos" element={<Pos />} />
+        <Route path="customers" element={<Customers />} />
+        <Route path="inventory" element={<Inventory />} />
+        <Route path="menu" element={<Menu />} />
+        <Route path="admin" element={<Admin />} />
+      </Route>
+
+      {/* fallback */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
-
-export default App
