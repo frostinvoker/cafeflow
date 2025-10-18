@@ -6,8 +6,6 @@
     gap: 1em;
     box-sizing: border-box;
     align-items: stretch;
-    min-height: 40ch;
-    max-height: 40ch;
 }
 
 .products-container {
@@ -78,4 +76,6 @@
   font-size: 1.2rem;
   font-weight: 500;
   cursor: pointer;
+  text-decoration: none;
+  text-align: center;
 }

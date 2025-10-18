@@ -2,9 +2,8 @@
   "name": "cafeflow-api",
   "version": "1.0.0",
   "type": "module",
-  "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "node --watch src/index.js",
     "start": "node src/index.js"
   },
   "dependencies": {
@@ -15,8 +14,5 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.6.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
   }
 }

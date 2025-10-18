@@ -49,6 +49,7 @@ h2{
     overflow-y: auto;
     min-height: 15ch;
     max-height: 20ch;
+    padding: 0.5em;
 }
 
 .inventory-list .item{

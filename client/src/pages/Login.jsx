@@ -4,37 +4,34 @@ import "../styles/Login.css";
 
 
 const Login = () => {
-  const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    setError("");
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        credentials: "include", // if using cookies/sessions
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || "Login failed");
-      }
-
       const data = await res.json();
-      localStorage.setItem("user", JSON.stringify(data.user));
-      nav("/", { replace: true });
+      if (res.ok) {
+        // If using JWT, save token: localStorage.setItem("token", data.token);
+        navigate("/"); // redirect to dashboard
+      } else {
+        setError(data.message || "Login failed");
+      }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setError("Network error");
     }
+    setLoading(false);
   }
   return (
     <div className="login-page">
@@ -88,7 +85,7 @@ const Login = () => {
             required
           />
           <button className="login-button" type="submit" disabled={loading}>
-            {loading ? "Signing in…" : "Login"}
+            {"Login"}
           </button>
 
           <Link to="/forgot-password">Forgot Password?</Link>
