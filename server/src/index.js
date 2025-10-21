@@ -6,6 +6,11 @@ import cookieParser from 'cookie-parser';
 import requireAuth from './middleware/requireAuth.js';
 import authRoutes from './routes/auth.js';
 import User from './models/User.js';
+import menuItemRoutes from './routes/menuItems.js';
+import inventoryRoutes from './routes/inventory.js';
+import customerRoutes from './routes/customers.js';
+import checkoutRoutes from './routes/checkouts.js';
+import addOnRoutes from './routes/addons.js';
 
 const app = express();
 
@@ -43,6 +48,11 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api', requireAuth);
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+app.use('/api/menu-items', menuItemRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/checkouts', checkoutRoutes);
+app.use('/api/addons', addOnRoutes);
 
 // debug: confirm DB + user count
 app.get('/api/debug/users-count', async (_req, res) => {

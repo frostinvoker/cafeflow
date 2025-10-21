@@ -55,7 +55,7 @@ router.post('/login', async (req, res) => {
       path: '/'
     });
 
-    return res.json({ user: { id: user._id, email: user.email, name: user.name } });
+    return res.json({ user: { id: user._id, email: user.email, name: user.name, role: user.role } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
@@ -76,7 +76,7 @@ router.post('/logout', (req, res) => {
 
 // GET /api/auth/me (auth check + current user)
 router.get('/me', requireAuth, async (req, res) => {
-  const user = await User.findById(req.userId).select('_id email name');
+  const user = await User.findById(req.userId).select('_id email name role');
   if (!user) return res.status(404).json({ message: 'User not found' });
   return res.json({ user });
 });

@@ -88,3 +88,69 @@ h2{
 .inventory-list .buttons .remove{
     background-color: #FF4D4D;
 }
+
+
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2em 2em;
+  box-shadow: 0 4px 25px 2px rgba(0,0,0,0.25);
+}
+
+.modal form{
+  width: 100%;
+  display: grid;
+  gap: 1em;
+}
+
+.modal input, .modal select{
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 1rem;
+  color: black;
+}
+
+.modal select{
+  background-color: transparent;
+}
+
+.modal-actions{
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+}
+
+.modal-actions .primary{
+  background: #006599;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.modal-actions .secondary{
+  background: transparent;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}

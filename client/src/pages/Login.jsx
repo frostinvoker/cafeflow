@@ -23,7 +23,7 @@ const Login = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        // If using JWT, save token: localStorage.setItem("token", data.token);
+        try { localStorage.setItem("user", JSON.stringify(data.user)); } catch {}
         navigate("/"); // redirect to dashboard
       } else {
         setError(data.message || "Login failed");

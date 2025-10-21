@@ -32,3 +32,10 @@ h2, h4{
     font-weight: 600;
 }
 
+button{
+  font-family: Poppins, sans-serif;
+}
+
+input{
+  color: black;
+}

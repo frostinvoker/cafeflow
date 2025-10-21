@@ -1,25 +1,50 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState, useCallback, useEffect } from "react";
 import "../../styles/Dashboard.css";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [signingOut, setSigningOut] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  let cancel = false;
-  (async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/me", {
-        credentials: "include",
-      });
-      if (!res.ok && !cancel) navigate("/login", { replace: true });
-    } catch {
-      if (!cancel) navigate("/login", { replace: true });
+    let cancel = false;
+    (async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/me", {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("unauth");
+        const data = await res.json();
+        if (!cancel) {
+          setUser(data.user);
+          try { localStorage.setItem("user", JSON.stringify(data.user)); } catch {}
+        }
+      } catch {
+        if (!cancel) navigate("/login", { replace: true });
+      } finally {
+        if (!cancel) setLoading(false);
+      }
+    })();
+    return () => { cancel = true; };
+  }, [navigate]);
+
+  // Redirect baristas away from restricted routes
+  useEffect(() => {
+    if (!user) return;
+    // Treat anything other than explicit 'manager' as restricted
+    if (user.role === 'manager') return;
+    const path = location.pathname.toLowerCase();
+    // Allowed for barista
+    const allowed = ["/pos", "/customers"];
+    const allowedPrefixes = ["/pos/checkout", "/pos/checkout/receipt"]; // nested POS routes
+    const isAllowed = allowed.includes(path) || allowedPrefixes.some(p => path.startsWith(p));
+    if (!isAllowed) {
+      navigate("/pos", { replace: true });
     }
-  })();
-  return () => { cancel = true; };
-}, [navigate]);
+  }, [user, location.pathname, navigate]);
 
   const link = ({ isActive }) => ({
     padding: "0.5em 0.8em",
@@ -40,7 +65,6 @@ export default function DashboardLayout() {
         headers: { "Content-Type": "application/json" },
       });
     } catch {
-        // ignore network errors on logout
     } finally {
       try { localStorage.removeItem("user"); } catch {}
       setSigningOut(false);
@@ -68,14 +92,14 @@ export default function DashboardLayout() {
             </svg>
             <h1>blue52</h1>
             <div>
-                <svg width="40" height="50" viewBox="0 0 50 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="35" height="35" viewBox="0 0 50 55" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M14.8667 50.1654C16.0755 51.6786 17.6157 52.9001 19.3712 53.7376C21.1266 54.5751 23.0514 55.0067 25 54.9999C26.9486 55.0067 28.8734 54.5751 30.6288 53.7376C32.3843 52.9001 33.9245 51.6786 35.1333 50.1654C28.4084 51.0665 21.5916 51.0665 14.8667 50.1654ZM43.7499 19.25V21.186C43.7499 23.5097 44.4165 25.7812 45.6721 27.7145L48.7498 32.4527C51.5582 36.7812 49.4137 42.6634 44.5276 44.0302C31.7603 47.6097 18.2397 47.6097 5.47236 44.0302C0.586279 42.6634 -1.55815 36.7812 1.25016 32.4527L4.32792 27.7145C5.58684 25.7652 6.25489 23.4996 6.25291 21.186V19.25C6.25291 8.61849 14.6473 0 25 0C35.3527 0 43.7499 8.61849 43.7499 19.25Z" fill="white"/>
                 </svg>
             </div>
             <div className="profile">
                 <div className="profile-name">
-                    <h3>Pedro</h3>
-                    <p>Manager</p>
+                    <h3>{user?.name || ""}</h3>
+                    <p>{user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : ""}</p>
                 </div>
                 <svg width="60" height="60" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="40" cy="40" r="40" fill="white"/>
@@ -88,10 +112,14 @@ export default function DashboardLayout() {
         <aside className="navbar">
           <nav>
             <NavLink to="/pos" end style={link}><div>POS</div></NavLink>
-            <NavLink to="/inventory" style={link}>Inventory</NavLink>
             <NavLink to="/customers" style={link}>Customers</NavLink>
-            <NavLink to="/admin" style={link}>Admin</NavLink>
-            <NavLink to="/menu" style={link}>Menu</NavLink>
+            {user?.role === 'manager' && (
+              <>
+                <NavLink to="/inventory" style={link}>Inventory</NavLink>
+                <NavLink to="/admin" style={link}>Admin</NavLink>
+                <NavLink to="/menu" style={link}>Menu</NavLink>
+              </>
+            )}
 
             <button
               type="button"
