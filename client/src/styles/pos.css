@@ -21,31 +21,83 @@
 }
 
 .product-list {
-    display: flex;
-    flex-direction: row;
+    padding: 0.1em;
+    max-height: 67vh;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1em;
-    margin-top: 1em;
+    align-content: start;
 }
+
 .shape {
     background-color: #D9D9D9;
     height: 10ch;
     width: 7ch;
 }
 .product{
-    width: 15ch;
-    display: flex;
-    flex-direction: column;
-    background: white;
-    box-shadow: 0px 0px 20px -5px rgba(0,0,0,0.25);
-    height: 15ch;
-    justify-content: center;
-    align-items: center;
-    padding: 1em;
-    border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 0 20px -8px rgba(0,0,0,0.25);
+  border-radius: 15px;
+  padding: 1em;
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  justify-items: center;
+  align-items: start;
+  user-select: none;
 }
 .product p, .product h4{
     margin: 0;
 }
+.product.is-available { 
+    cursor: pointer; 
+}
+.product.is-available:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px -8px rgba(0,0,0,0.28);
+}
+.product.is-unavailable {
+  opacity: 0.55;
+  filter: grayscale(0.8);
+  pointer-events: none;
+}
+.product .name { 
+    margin: 0.5rem 0 0; 
+    text-align: center; 
+}
+.product .availability { 
+    color: #4b5563; 
+    font-size: 0.85rem; 
+}
+.product .availability.ok {
+    border-radius: 10px;
+    padding: 0.2em 0.8em;
+    background: #D4EDDA;
+    color: #155724; 
+}
+.product .availability.na { 
+    border-radius: 10px;
+    padding: 0.2em 0.8em;
+    background: #F7E7E8;
+    color: #BC9498; 
+}
+.shape {
+  width: 5ch;
+  height: 5ch;
+  background: #d9d9d9;
+}
+
+.shape.square { border-radius: 10px; }
+.shape.drinks  { background: #2d9cdb; } 
+
+.shape.circle { border-radius: 50%; }
+.shape.meals  { background: #27ae60; } 
+
+.shape.triangle {
+  background: #f2994a;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
 .checkout{
     display: flex;
     flex-direction: column;

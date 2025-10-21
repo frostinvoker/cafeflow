@@ -11,23 +11,41 @@
   margin-top: 1rem;
   border-radius: 15px;
 }
-
-table{
+.table-scroll {
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.menu{
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
     margin-top: 1em;
     max-height: 30ch;
-    overflow-y: auto;
 }
 .table-header{
     background-color: #006599;
 }
 .table-header th{
+    z-index: 1;
+    position: sticky;
     text-align: left;
     color: white;
     font-weight: 600;
     padding: 0.7em 1em;
+    top: 0;
+    background: #006599;
 }
-
-.table-body td{
+.table-header th:nth-child(4), th:nth-child(5){
+    text-align: center;
+}
+.menu tbody tr:nth-child(odd){
+    background: white;
+}
+.menu tbody tr:nth-child(even){
+    background: #F2F6F8;
+}
+.menu .table-body td{
     text-align: left;
     font-weight: 500;
     padding: 0.7em 1em;
@@ -37,7 +55,24 @@ table{
     color: #006599;
     font-weight: 600;
 }
-
+.table-body td.availability.available{ 
+    color: #155724; 
+}
+td.availability.unavailable { 
+    color: #BC9498; 
+}
+td.availability .badge {
+    text-align: center;
+    width: 100%;
+    display: inline-block;
+    padding: .2rem .5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    background: #D4EDDA;
+}
+td.availability.unavailable .badge {
+  background: #F7E7E8;
+}
 .table-body .buttons{
     display: inline-flex;
     flex-direction: row;
@@ -63,9 +98,6 @@ table{
     border-radius: 10px;
     cursor: pointer;
     font-family: Poppins, sans-serif;
-}
-.default-container .header-buttons button:last-child{
-    margin-left: auto;
 }
 .table-body .buttons .edit{
     background-color: #4CAF50;
@@ -131,11 +163,23 @@ table{
   padding: 0.5rem 0.9rem;
   cursor: pointer;
 }
-
+.checkbox-availability{
+    display: flex;
+    align-items: left;
+}
 .modal-actions .secondary{
   background: transparent;
   color: #111827;
   border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.modal-actions .remove {
+  background: #FF4D4D;
+  color: #fff;
+  border: none;
   border-radius: 10px;
   padding: 0.5rem 0.9rem;
   cursor: pointer;
