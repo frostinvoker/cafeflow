@@ -7,14 +7,12 @@ const UserSchema = new mongoose.Schema(
     name:  { type: String, required: true, trim: true },
     passwordHash: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true, versionKey: false } // <-- add this
 );
-
 
 UserSchema.methods.setPassword = async function (password) {
   this.passwordHash = await bcrypt.hash(password, 12);
 };
-
 
 UserSchema.methods.validatePassword = async function (password) {
   return bcrypt.compare(password, this.passwordHash);

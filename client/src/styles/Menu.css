@@ -54,6 +54,7 @@ table{
 .default-container .header-buttons{
     display: flex;
     flex-direction: row;
+    margin-top: 1em;
 }
 .default-container .header-buttons button{
     border: none;

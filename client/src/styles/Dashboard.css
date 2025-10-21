@@ -65,8 +65,17 @@
     gap: 0.5em;
     height:100%;
 }
-
-.navbar nav a:last-child {
+.navbar nav button{
+    cursor: pointer;
+    background: white;
+    border: none;
+    color: black;
+    text-align: left;
+    font-family: Poppins, sans-serif;
+    font-size: 1rem;
+    padding: 1em;
+}
+.navbar nav button:last-child {
   margin-top: auto;
 }
 

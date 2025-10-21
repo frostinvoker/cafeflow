@@ -1,6 +1,26 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect } from "react";
 import "../../styles/Dashboard.css";
+
 export default function DashboardLayout() {
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+  let cancel = false;
+  (async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/me", {
+        credentials: "include",
+      });
+      if (!res.ok && !cancel) navigate("/login", { replace: true });
+    } catch {
+      if (!cancel) navigate("/login", { replace: true });
+    }
+  })();
+  return () => { cancel = true; };
+}, [navigate]);
+
   const link = ({ isActive }) => ({
     padding: "0.5em 0.8em",
     borderRadius: 8,
@@ -9,9 +29,31 @@ export default function DashboardLayout() {
     background: isActive ? "rgba(0, 101, 153, 0.18)" : "transparent",
   });
 
+  const handleSignOut = useCallback(async (e) => {
+    e?.preventDefault?.();
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("http://localhost:5000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch {
+        // ignore network errors on logout
+    } finally {
+      try { localStorage.removeItem("user"); } catch {}
+      setSigningOut(false);
+      try {
+        navigate("/login", { replace: true });
+      } catch {
+        window.location.assign("/login");
+      }
+    }
+  }, [signingOut, navigate]);
+
   return (
     <div className="dashboard">
-
         <header className="header">
             <svg width="75" height="75" viewBox="0 0 95 95" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="47.5" cy="47.5" r="47.5" fill="#FCF1FD"/>
@@ -24,7 +66,7 @@ export default function DashboardLayout() {
                 <circle cx="44.8263" cy="47.7262" r="1.93614" fill="#FCF1FD"/>
                 <ellipse cx="44.439" cy="47.0811" rx="1.54891" ry="1.54891" fill="#006599"/>
             </svg>
-            <h1>Blue52</h1>
+            <h1>blue52</h1>
             <div>
                 <svg width="40" height="50" viewBox="0 0 50 55" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M14.8667 50.1654C16.0755 51.6786 17.6157 52.9001 19.3712 53.7376C21.1266 54.5751 23.0514 55.0067 25 54.9999C26.9486 55.0067 28.8734 54.5751 30.6288 53.7376C32.3843 52.9001 33.9245 51.6786 35.1333 50.1654C28.4084 51.0665 21.5916 51.0665 14.8667 50.1654ZM43.7499 19.25V21.186C43.7499 23.5097 44.4165 25.7812 45.6721 27.7145L48.7498 32.4527C51.5582 36.7812 49.4137 42.6634 44.5276 44.0302C31.7603 47.6097 18.2397 47.6097 5.47236 44.0302C0.586279 42.6634 -1.55815 36.7812 1.25016 32.4527L4.32792 27.7145C5.58684 25.7652 6.25489 23.4996 6.25291 21.186V19.25C6.25291 8.61849 14.6473 0 25 0C35.3527 0 43.7499 8.61849 43.7499 19.25Z" fill="white"/>
@@ -42,22 +84,40 @@ export default function DashboardLayout() {
 
             </div>
         </header>
+      <div className="container">
+        <aside className="navbar">
+          <nav>
+            <NavLink to="/pos" end style={link}><div>POS</div></NavLink>
+            <NavLink to="/inventory" style={link}>Inventory</NavLink>
+            <NavLink to="/customers" style={link}>Customers</NavLink>
+            <NavLink to="/admin" style={link}>Admin</NavLink>
+            <NavLink to="/menu" style={link}>Menu</NavLink>
 
-        <div className="container">
-            <aside className="navbar">
-                <nav>
-                <NavLink to="/pos" end style={link}><div>POS</div></NavLink>
-                <NavLink to="/inventory" style={link}>Inventory</NavLink>
-                <NavLink to="/customers" style={link}>Customers</NavLink>
-                <NavLink to="/admin" style={link}>Admin</NavLink>
-                <NavLink to="/menu" style={link}>Menu</NavLink>
-                <NavLink to="/login" style={link} className="signout">Sign out</NavLink>
-                </nav>
-            </aside>
-            <main>
-                <Outlet />
-            </main>
-        </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="signout"
+              style={{
+                display: "block",
+                padding: "0.5em 0.8em",
+                borderRadius: 8,
+                border: "none",
+                background: "transparent",
+                textAlign: "left",
+                cursor: signingOut ? "default" : "pointer",
+                opacity: signingOut ? 0.6 : 1,
+              }}
+              disabled={signingOut}
+              aria-busy={signingOut ? "true" : "false"}
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
+          </nav>
+        </aside>
+        <main>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

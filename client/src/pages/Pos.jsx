@@ -1,3 +1,4 @@
+import { NavLink} from "react-router-dom";
 import "../styles/pos.css";
 
 export default function Pos() {
@@ -34,7 +35,7 @@ export default function Pos() {
                     <h4>Total</h4>
                     <h4>₱0</h4>
                 </div>
-                <button className="checkout-btn">Checkout</button>
+                <NavLink to="/pos/checkout" className="checkout-btn">Checkout</NavLink>
             </div>
         </div>
     );
