@@ -7,7 +7,6 @@
     font-weight: 500;
 }
 input{
-    width: 60%;
     border: 1px solid #7B7B7B;
     background-color: white;
     padding: 1em;
@@ -23,7 +22,7 @@ input{
     gap: 0.5em;
 }
 .manager-account .manager-password-form, .barista-new-account{
-    width: 100%;
+    width: 60%;
     display: flex;
     flex-direction: column;
     gap: 0.5em;
@@ -31,7 +30,6 @@ input{
 
 .admin-long-button{
     cursor: pointer;
-    width: 60%;
     border: none;
     border-radius: 15px;
     background: #006599;

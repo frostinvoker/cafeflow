@@ -1,3 +1,21 @@
+.menu-category{
+  margin-top: 1em;
+  display: inline-flex;
+  gap: 0.5em;
+}
+.menu-category .category-button{
+  padding: 0.3em 1.5em;
+  border: 0.5px solid black;
+  background: white;
+  border-radius: 10px;
+  color: black;
+  cursor: pointer;
+}
+.menu-category .active{
+  background: #006599;
+  color: white;
+  border: none;
+}
 .add-customer{
   min-width: 5ch;
   max-width: 20ch;
@@ -12,7 +30,7 @@
   border-radius: 15px;
 }
 .table-scroll {
-    max-height: 60vh;
+    max-height: 50vh;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -99,6 +117,9 @@ td.availability.unavailable .badge {
     cursor: pointer;
     font-family: Poppins, sans-serif;
 }
+.default-container .header-buttons button:last-child{
+  margin-left: auto;
+}
 .table-body .buttons .edit{
     background-color: #4CAF50;
 }
@@ -183,4 +204,12 @@ td.availability.unavailable .badge {
   border-radius: 10px;
   padding: 0.5rem 0.9rem;
   cursor: pointer;
+}
+
+.modal .modal-item-form, .modal .modal-addon-form{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: left;
 }

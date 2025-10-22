@@ -27,11 +27,19 @@
     justify-content: center;
     gap: 0.5em;
 }
-.profile-name h3{
-    margin: 0;
-}
+
 .profile-name p{
     margin: 0;
+    color: white;
+}
+.profile-name p:first-child{
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+.profile-name p:last-child{
+    text-align: right;
+    font-size: 0.7rem;
+    font-weight: 500;
 }
 .header div:nth-last-child(2){
     margin-left: auto;

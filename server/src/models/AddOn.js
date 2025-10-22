@@ -14,10 +14,8 @@ const AddOnSchema = new mongoose.Schema(
     active: { type: Boolean, default: true },
 
     // Limit application to drinks only (kept explicit for future extensibility)
-    applicableTo: { type: String, enum: ['drink'], default: 'drink' },
-
-    // Optional notes or description for staff
-    notes: { type: String, trim: true }
+    category: { type: String, enum: ['Drinks', 'Snacks', 'Meals'], default: 'Drinks' },
+    
   },
   { timestamps: true, versionKey: false }
 );

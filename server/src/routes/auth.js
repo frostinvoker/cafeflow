@@ -41,12 +41,15 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user || !(await user.validatePassword(password))) {
-      return res.status(401).json({ message: 'Invalid Email or Password' });
+      return res.status(401).json({message: 'Invalid Email or Password' });
     }
+
+    if (user.status !== 'active'){
+      return res.status(401).json({message:"Account Disabled"}) 
+    };
 
     const token = signToken(user._id.toString(), JWT_SECRET);
 
-    // IMPORTANT: fix the 'res res.cookie' typo and set cookie correctly.
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: 'lax',

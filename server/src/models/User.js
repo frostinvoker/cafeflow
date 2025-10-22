@@ -4,8 +4,9 @@ import bcrypt from "bcryptjs";
 const UserSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    name:  { type: String, required: true, trim: true },
-    role:  { type: String, enum: ["manager", "barista"], default: "barista" },
+    name: { type: String, required: true, trim: true },
+    role: { type: String, enum: ["manager", "barista"], default: "barista" },
+    status: {type: String, enum:["active","disabled"], default:"active" },
     passwordHash: { type: String, required: true },
   },
   { timestamps: true, versionKey: false } // <-- add this
