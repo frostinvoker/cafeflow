@@ -23,6 +23,7 @@ export default function App() {
         <Route path="pos" element={<Pos />} />
         <Route path="pos/checkout" element={<Checkout />} />
         <Route path="pos/checkout/receipt" element={<Receipt />} />
+        <Route path="/pos/checkout/receipt/:checkoutId" element={<Receipt />} />
         <Route path="customers" element={<Customers />} />
         <Route path="inventory" element={<Inventory />} />
         <Route path="menu" element={<Menu />} />

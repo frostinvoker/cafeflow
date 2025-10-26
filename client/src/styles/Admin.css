@@ -1,34 +1,98 @@
-.admin-container{
+.management-container{
+    padding: 0.5em;
+    max-height: 60vh;
     overflow-y: auto;
 }
+.management-container h3{
+    font-weight: 500;
+}
 input{
-    width: 45%;
     border: 1px solid #7B7B7B;
     background-color: white;
     padding: 1em;
     border-radius: 10px;
 }
 .manager-account{
-    max-height: 70ch;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     background: white;
-    box-shadow: 0 4px 20px 0 rgba(0,0,0,0.25);
+    box-shadow: 0 0 20px -8px rgba(0,0,0,0.25);
     padding: 1em;
     border-radius: 15px;
     gap: 0.5em;
 }
-
-.manager-account h3{
-    font-weight: 500;
+.manager-account .manager-password-form, .barista-new-account{
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
 }
 
 .admin-long-button{
     cursor: pointer;
-    width: 45%;
     border: none;
     border-radius: 15px;
     background: #006599;
     padding: 1em;
     color: white;
+}
+
+.barista-management{
+    display: flex;
+    flex-direction: column;
+    background: white;
+    box-shadow: 0 0 20px -8px rgba(0,0,0,0.25);
+    padding: 1em;
+    border-radius: 15px;
+    gap: 0.5em;
+    margin-top: 1em;
+}
+
+.barista-table{
+    width: 100%;
+}
+
+.table-header-barista th{
+    text-align: left;
+    background: #E2E8ED;
+    color: black;
+    font-weight: 500;
+    padding: 0.7em 1em;
+}
+.table-body .buttons-barista{
+    display: inline-flex;
+    flex-direction: row;
+    gap: 0.5em;
+}
+.table-body .buttons-barista button{
+    border: none;
+    font-family: Poppins, sans-serif;
+    border-radius: 5px;
+    padding: 0.5em 0.7em;
+    cursor: pointer;
+}
+.edit-password{
+    background: #006599;
+}
+.disable-account{
+    background: #F87171;
+}
+
+.table-scroll tbody td.status.active{
+    color: #155724; 
+}
+.table-scroll tbody td.status.disabled{
+    color: #BC9498; 
+}
+.table-scroll tbody td.status .badge {
+    text-align: center;
+    width: 100%;
+    display: inline-block;
+    padding: .2rem .5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    background: #D4EDDA;
+}
+.table-scroll tbody td.status.disabled .badge {
+  background: #F7E7E8;
 }

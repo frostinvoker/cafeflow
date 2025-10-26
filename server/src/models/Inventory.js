@@ -1,32 +1,15 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const inventorySchema = new mongoose.Schema({
-  type: {
-    type: String,
-    required: true,
-    trim: true
+const InventorySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, unique: true },
+    unit: { type: String, trim: true, default: 'pcs' },
+    quantity: { type: Number, required: true, default: 0, min: 0 },
+    price: { type: Number, min: 0 },
+    available: { type: Boolean, default: true },
+    lowStockThreshold: { type: Number, default: 0, min: 0 },
   },
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  amount: {
-    type: Number,
-    required: true,
-    default: 0,
-    min: 0
-  },
-  lastUpdated: {
-    type: Date,
-    default: Date.now
-  }
-});
+  { timestamps: true, versionKey: false }
+);
 
-// Optional: Automatically update 'lastUpdated' whenever the document changes
-inventorySchema.pre('save', function (next) {
-  this.lastUpdated = Date.now();
-  next();
-});
-
-module.exports = mongoose.model('Inventory', inventorySchema);
+export default mongoose.model('Inventory', InventorySchema);

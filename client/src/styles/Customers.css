@@ -1,6 +1,4 @@
 .add-customer{
-  min-width: 5ch;
-  max-width: 20ch;
   padding: 0.7em;
   background: #006599;
   color: #fff;
@@ -9,7 +7,7 @@
   font-weight: 500;
   cursor: pointer;
   margin-top: 1rem;
-  border-radius: 15px;
+  border-radius: 10px;
 }
 
 table{
@@ -26,18 +24,21 @@ table{
     font-weight: 600;
     padding: 0.7em 1em;
 }
-
 .table-body td{
     text-align: left;
     font-weight: 500;
     padding: 0.7em 1em;
 }
-
+.customer tbody tr:nth-child(odd){
+    background: white;
+}
+.customer tbody tr:nth-child(even){
+    background: #F2F6F8;
+}
 .table-body td:nth-child(3){
     color: #006599;
     font-weight: 600;
 }
-
 .table-body .buttons{
     display: inline-flex;
     flex-direction: row;
@@ -58,4 +59,84 @@ table{
 
 .table-body .buttons .remove{
     background-color: #FF4D4D;
+}
+
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.addMenuCustomer-modal{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2em 2em;
+  box-shadow: 0 4px 25px 2px rgba(0,0,0,0.25);
+}
+
+.addMenuCustomer-modal form{
+  width: 100%;
+  display: grid;
+  gap: 1em;
+}
+
+.addMenuCustomer-modal input, .addMenuCustomer-modal select{
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 1rem;
+  color: black;
+}
+
+.addMenuCustomer-modal select{
+  background-color: transparent;
+}
+
+.modal-actions{
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+}
+
+.modal-actions .primary{
+  background: #006599;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.modal-actions .secondary{
+  background: transparent;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.modal-actions .remove {
+  background: #FF4D4D;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+input.readonly[readonly] {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
 }

@@ -9,7 +9,6 @@ function signToken(userId, secret) {
   return jwt.sign({ sub: userId }, secret, { expiresIn: '7d' });
 }
 
-// POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
     const { email, name, password } = req.body;
@@ -33,7 +32,6 @@ router.post('/register', async (req, res) => {
 }
 });
 
-// POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -41,12 +39,15 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user || !(await user.validatePassword(password))) {
-      return res.status(401).json({ message: 'Invalid Email or Password' });
+      return res.status(401).json({message: 'Invalid Email or Password' });
     }
+
+    if (user.status !== 'active'){
+      return res.status(401).json({message:"Account Disabled"}) 
+    };
 
     const token = signToken(user._id.toString(), JWT_SECRET);
 
-    // IMPORTANT: fix the 'res res.cookie' typo and set cookie correctly.
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: 'lax',
@@ -55,14 +56,13 @@ router.post('/login', async (req, res) => {
       path: '/'
     });
 
-    return res.json({ user: { id: user._id, email: user.email, name: user.name } });
+    return res.json({ user: { id: user._id, email: user.email, name: user.name, role: user.role } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
 
-// POST /api/auth/logout
 router.post('/logout', (req, res) => {
   const { COOKIE_NAME, COOKIE_SECURE } = process.env;
   res.clearCookie(COOKIE_NAME, {
@@ -74,9 +74,8 @@ router.post('/logout', (req, res) => {
   return res.json({ message: 'Logged out' });
 });
 
-// GET /api/auth/me (auth check + current user)
 router.get('/me', requireAuth, async (req, res) => {
-  const user = await User.findById(req.userId).select('_id email name');
+  const user = await User.findById(req.userId).select('_id email name role');
   if (!user) return res.status(404).json({ message: 'User not found' });
   return res.json({ user });
 });

@@ -10,6 +10,12 @@ h2{
     justify-self: stretch;
     align-self: stretch;
 }
+.low-supply-alert{
+  display: none;
+}
+.low-supply-alert.show{
+  display: block;
+}
 .low-supply-alert p{
     padding: 1em 1em;
     background-color: #FFE7E7;
@@ -48,7 +54,7 @@ h2{
     gap: 1em;
     overflow-y: auto;
     min-height: 15ch;
-    max-height: 20ch;
+    max-height: 45vh;
     padding: 0.5em;
 }
 
@@ -57,7 +63,7 @@ h2{
     display: flex;
     flex-direction: column;
     background: white;
-    box-shadow: 0px 0px 20px -5px rgba(0,0,0,0.25);
+    box-shadow: 0 0 20px -8px rgba(0,0,0,0.25);
     height: 15ch;
     justify-content: center;
     align-items: center;
@@ -73,18 +79,85 @@ h2{
     display: flex;
     flex-direction: row;
     gap: 0.4em;
+    justify-content: center;
 }
 
-.inventory-list .buttons button{
+.inventory-list .item .buttons button{
     border: none;
     padding: 0.3em 1em;
     border-radius: 5px;
     cursor: pointer;
 }
 
-.inventory-list .buttons .add{
+.inventory-list .item .buttons .add{
     background-color: #4CAF50;
 }
-.inventory-list .buttons .remove{
+.inventory-list .item .buttons .remove{
     background-color: #FF4D4D;
+}
+
+
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2em 2em;
+  box-shadow: 0 4px 25px 2px rgba(0,0,0,0.25);
+}
+
+.modal form{
+  width: 100%;
+  display: grid;
+  gap: 1em;
+}
+
+.modal input, .modal select{
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 1rem;
+  color: black;
+}
+
+.modal select{
+  background-color: transparent;
+}
+
+.modal-actions{
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+}
+
+.modal-actions .primary{
+  background: #006599;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.modal-actions .secondary{
+  background: transparent;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
 }
