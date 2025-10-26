@@ -133,5 +133,12 @@
     cursor: pointer;
 }
 
-
+.modal-actions .confirm {
+  background: #006599;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
 

@@ -9,7 +9,6 @@ function signToken(userId, secret) {
   return jwt.sign({ sub: userId }, secret, { expiresIn: '7d' });
 }
 
-// POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
     const { email, name, password } = req.body;
@@ -33,7 +32,6 @@ router.post('/register', async (req, res) => {
 }
 });
 
-// POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -65,7 +63,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/logout
 router.post('/logout', (req, res) => {
   const { COOKIE_NAME, COOKIE_SECURE } = process.env;
   res.clearCookie(COOKIE_NAME, {
@@ -77,7 +74,6 @@ router.post('/logout', (req, res) => {
   return res.json({ message: 'Logged out' });
 });
 
-// GET /api/auth/me (auth check + current user)
 router.get('/me', requireAuth, async (req, res) => {
   const user = await User.findById(req.userId).select('_id email name role');
   if (!user) return res.status(404).json({ message: 'User not found' });

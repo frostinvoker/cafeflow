@@ -1,4 +1,3 @@
-// Routes for MenuItem CRUD
 import { Router } from 'express';
 import {
   listMenuItems,

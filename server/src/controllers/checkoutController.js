@@ -38,9 +38,9 @@ export async function createCheckout(req, res) {
       customer: customerId,
       status = 'pending',
       paymentMethod = 'cash',
-      payment = {},              // { tendered, referenceId }
+      payment = {},             
       orderType = 'takeout',
-      redeemFreeDrink = false    // optional boolean to redeem 100 pts
+      redeemFreeDrink = false    
     } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -58,7 +58,7 @@ export async function createCheckout(req, res) {
 
     const isDrink = (mi) => (mi?.category || '').toLowerCase() === 'drinks';
 
-    // Build line item snapshots
+    // Build line item
     const lineItems = items.map((i) => {
       const doc = itemById.get(String(i.menuItem));
       if (!doc) throw new Error('Invalid or unavailable menu item');
@@ -86,29 +86,24 @@ export async function createCheckout(req, res) {
         price: Number(doc.price) || 0,
         quantity: qty,
         addons: addonsSnapshots,
-        lineDiscount: 0, // per-unit discount; controller may set for 100-pt redemption
-        subtotal: 0      // computed by pre-validate
+        lineDiscount: 0, 
+        subtotal: 0     
       };
     });
 
-    // Optional: redeem 100 pts => make ONE drink free (base price only)
-    // You can switch to include add-ons in the free value by changing basePerUnit below.
     let pointsSpent = 0;
     if (redeemFreeDrink && customerId) {
       const cust = await Customer.findById(customerId).session(session);
       if (cust && cust.loyaltyPoints >= 100) {
-        // choose the first drink line (or pick the highest-priced drink if you prefer)
         const drinkIndex = lineItems.findIndex(li => {
           const src = itemById.get(String(li.menuItem));
           return isDrink(src);
         });
         if (drinkIndex >= 0) {
           const li = lineItems[drinkIndex];
-          const basePerUnit = Number(li.price) || 0; // free base drink only
-          // To discount exactly one unit across the whole line, distribute as per-unit:
-          // perUnitDiscount * quantity = total discount for 1 unit
+          const basePerUnit = Number(li.price) || 0; 
           const perUnitDiscount = li.quantity > 0 ? basePerUnit / li.quantity : 0;
-          li.lineDiscount = Math.min(li.lineDiscount + perUnitDiscount, li.price); // cap per-unit
+          li.lineDiscount = Math.min(li.lineDiscount + perUnitDiscount, li.price);
           pointsSpent = 100;
         }
       }
@@ -137,24 +132,19 @@ export async function createCheckout(req, res) {
       orderType
     });
 
-    // let model compute subtotals/totals
     await checkout.validate({ session });
-    // compute change (cash only)
     if (paymentMethod === 'cash') {
       checkout.payment.change = Math.max(0, (checkout.payment.tendered || 0) - (checkout.total || 0));
     } else {
       checkout.payment.change = 0;
     }
 
-    // Earn 10% points on what they paid (after redemption).
-    // Round down to an integer.
     const pointsEarned = Math.floor((checkout.total || 0) * 0.10);
     checkout.pointsEarned = pointsEarned;
     checkout.pointsSpent = pointsSpent;
 
     await checkout.save({ session });
 
-    // Update customer points atomically
     if (customerId) {
       await Customer.findByIdAndUpdate(
         customerId,

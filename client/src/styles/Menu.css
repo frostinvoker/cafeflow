@@ -213,3 +213,31 @@ td.availability.unavailable .badge {
   align-items: center;
   text-align: left;
 }
+
+.ingredients-list{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+
+}
+.ingredients-list .ingredient-check{
+  display:grid;
+  grid-template-columns: 1.1rem 1fr;
+  align-items:start;
+  column-gap:.5rem;
+}
+
+.ingredient-summary-row .select-ingredients{
+  border: none;
+  background: #006599;
+  border-radius: 10px;
+  padding: 0.5em 1em;
+  margin-bottom: 1em;
+}
+ .modal-item-form .ingredient-summary-row .select-ingredients{
+  border: none;
+  background: #006599;
+  border-radius: 10px;
+  padding: 0.5em 1em;
+ }

@@ -1,4 +1,3 @@
-// Routes for Customer CRUD
 import { Router } from 'express';
 import {
   listCustomers,

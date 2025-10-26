@@ -77,3 +77,22 @@ input{
 .disable-account{
     background: #F87171;
 }
+
+.table-scroll tbody td.status.active{
+    color: #155724; 
+}
+.table-scroll tbody td.status.disabled{
+    color: #BC9498; 
+}
+.table-scroll tbody td.status .badge {
+    text-align: center;
+    width: 100%;
+    display: inline-block;
+    padding: .2rem .5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    background: #D4EDDA;
+}
+.table-scroll tbody td.status.disabled .badge {
+  background: #F7E7E8;
+}

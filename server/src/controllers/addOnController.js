@@ -1,4 +1,3 @@
-// AddOn controllers: CRUD for drink add-ons (e.g., syrups, extra shots)
 import AddOn from '../models/AddOn.js';
 
 export async function listAddOns(req, res) {

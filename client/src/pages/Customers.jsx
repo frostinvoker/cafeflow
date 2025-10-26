@@ -67,7 +67,8 @@ export default function Customers() {
         body: JSON.stringify(body),
       });
       const created = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(created?.message || "Failed to add customer");
+      if (!res.ok)
+        throw new Error(created?.message || "Failed to add customer");
       setItems((list) => [created, ...list]);
       closeAddCustomer();
     } catch (err) {
@@ -115,7 +116,8 @@ export default function Customers() {
         }
       );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.message || "Failed to update customer");
+      if (!res.ok)
+        throw new Error(data?.message || "Failed to update customer");
       setItems((list) => list.map((it) => (it._id === data._id ? data : it)));
       closeEditCustomer();
     } catch (err) {
@@ -141,7 +143,8 @@ export default function Customers() {
         }
       );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.message || "Failed to delete customer");
+      if (!res.ok)
+        throw new Error(data?.message || "Failed to delete customer");
       setItems((list) => list.filter((it) => it._id !== deleteTarget._id));
       closeDeleteConfirm();
     } catch (err) {

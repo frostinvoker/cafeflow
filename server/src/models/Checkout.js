@@ -1,5 +1,3 @@
-// Checkout model: one POS transaction (aka order/receipt).
-// Stores line items with a snapshot of menu names/prices at the time.
 import mongoose from 'mongoose';
 
 const CounterSchema = new mongoose.Schema(
@@ -8,7 +6,6 @@ const CounterSchema = new mongoose.Schema(
 );
 const Counter = mongoose.models.Counter || mongoose.model('Counter', CounterSchema);
 
-// Embedded schema for add-on snapshot on a line item
 const AddOnSnapshotSchema = new mongoose.Schema(
   {
     addon: { type: mongoose.Schema.Types.ObjectId, ref: 'AddOn', required: true },
@@ -18,25 +15,14 @@ const AddOnSnapshotSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// Embedded schema for a single line of the receipt
 const LineItemSchema = new mongoose.Schema(
   {
-    // Reference to the menu item ordered
     menuItem: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
-
-    // Snapshot of the menu item name at checkout time
     name: { type: String, required: true, trim: true },
-
-    // Unit price captured at checkout time
     price: { type: Number, required: true, min: 0 },
-
-    // Quantity of the item ordered
     quantity: { type: Number, required: true, min: 1, default: 1 },
-
-    // Optional add-ons applied to this item (drinks only)
     addons: { type: [AddOnSnapshotSchema], default: [] },
     lineDiscount: { type: Number, default: 0, min: 0 },
-    // Derived: (price + sum(addons.price)) * quantity
     subtotal: { type: Number, required: true, min: 0 },
 
   },
@@ -45,21 +31,15 @@ const LineItemSchema = new mongoose.Schema(
 
 const CheckoutSchema = new mongoose.Schema(
   {
-    // List of purchased items
     items: { type: [LineItemSchema], default: [] },
-
-    // Optional reference to a known customer
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
 
     customerSnapshot: {
       name:  { type: String, trim: true },
       email: { type: String, trim: true, lowercase: true }
     },
-    
-    // Current lifecycle state of the transaction
-    status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
 
-    // Optional: cash, card, gcash, etc.
+    status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
     paymentMethod: { type: String, enum: ['cash','gcash'], default: 'cash' },
 
     payment: {
@@ -68,9 +48,7 @@ const CheckoutSchema = new mongoose.Schema(
       referenceId: { type: String, trim: true }
     },
     receiptNo: { type: Number, index: true, unique: true },
-
     subtotal: { type: Number, required: true, default: 0, min: 0 },
-    // Sum of all line item subtotals
     total: { type: Number, required: true, default: 0, min: 0 },
 
     //Loyalty Pts
@@ -80,13 +58,10 @@ const CheckoutSchema = new mongoose.Schema(
     printCount: { type: Number, default: 0, min: 0 },
     lastPrintedAt: { type: Date }
   },
-  // Created/updated timestamps; skip __v
   { timestamps: true, versionKey: false }
 );
 
-// Keep totals consistent based on items
 CheckoutSchema.pre('validate', function (next) {
-  //line subtotal
   for (const it of this.items || []) {
     const base = Number(it.price) || 0;
     const addons = (it.addons || []).reduce((s, a) => s + (Number(a.price) || 0), 0);

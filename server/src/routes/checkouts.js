@@ -1,4 +1,3 @@
-// Routes for Checkout CRUD
 import { Router } from 'express';
 import {
   listCheckouts,

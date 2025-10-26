@@ -54,7 +54,7 @@ h2{
     gap: 1em;
     overflow-y: auto;
     min-height: 15ch;
-    max-height: 20ch;
+    max-height: 45vh;
     padding: 0.5em;
 }
 
@@ -79,19 +79,20 @@ h2{
     display: flex;
     flex-direction: row;
     gap: 0.4em;
+    justify-content: center;
 }
 
-.inventory-list .buttons button{
+.inventory-list .item .buttons button{
     border: none;
     padding: 0.3em 1em;
     border-radius: 5px;
     cursor: pointer;
 }
 
-.inventory-list .buttons .add{
+.inventory-list .item .buttons .add{
     background-color: #4CAF50;
 }
-.inventory-list .buttons .remove{
+.inventory-list .item .buttons .remove{
     background-color: #FF4D4D;
 }
 

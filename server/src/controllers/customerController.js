@@ -1,4 +1,3 @@
-// Customer controllers: CRUD for customers and loyalty tracking.
 import Customer from '../models/Customer.js';
 
 export async function listCustomers(req, res) {

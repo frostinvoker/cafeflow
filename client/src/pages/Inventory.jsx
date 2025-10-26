@@ -8,7 +8,12 @@ export default function Inventory() {
 
   // ADD modal state
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ name: "", quantity: "", price: "", unit: "" });
+  const [form, setForm] = useState({
+    name: "",
+    quantity: "",
+    price: "",
+    unit: "",
+  });
 
   // EDIT modal state
   const [showEdit, setShowEdit] = useState(false);
@@ -31,7 +36,9 @@ export default function Inventory() {
     let cancel = false;
     (async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/inventory", { credentials: "include" });
+        const res = await fetch("http://localhost:5000/api/inventory", {
+          credentials: "include",
+        });
         if (!res.ok) throw new Error("Failed to load inventory");
         const data = await res.json();
         if (!cancel) setItems(data);
@@ -41,7 +48,9 @@ export default function Inventory() {
         if (!cancel) setLoading(false);
       }
     })();
-    return () => { cancel = true; };
+    return () => {
+      cancel = true;
+    };
   }, []);
 
   // --- ADD modal handlers ---
@@ -89,7 +98,8 @@ export default function Inventory() {
       _id: it._id,
       name: it.name ?? "",
       quantity: String(it.quantity ?? ""),
-      price: it.price !== undefined && it.price !== null ? String(it.price) : "",
+      price:
+        it.price !== undefined && it.price !== null ? String(it.price) : "",
       unit: it.unit ?? "pc",
     });
     setShowEdit(true);
@@ -113,16 +123,21 @@ export default function Inventory() {
     if (editForm.price !== "") body.price = Number(editForm.price) || 0;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/inventory/${editForm._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/inventory/${editForm._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(body),
+        }
+      );
       const updated = await res.json().catch(() => null);
       if (!res.ok) throw new Error(updated?.message || "Failed to update item");
 
-      setItems((list) => list.map((x) => (x._id === updated._id ? updated : x)));
+      setItems((list) =>
+        list.map((x) => (x._id === updated._id ? updated : x))
+      );
       closeEdit();
     } catch (err) {
       setError(err.message || "Failed to update item");
@@ -139,10 +154,13 @@ export default function Inventory() {
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/inventory/${deleteTarget._id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/inventory/${deleteTarget._id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.message || "Failed to delete item");
       setItems((list) => list.filter((it) => it._id !== deleteTarget._id));
@@ -162,12 +180,21 @@ export default function Inventory() {
       <h2>Inventory</h2>
 
       <div className={`low-supply-alert ${hasLow ? "show" : ""}`}>
-        <p>Low Supply: {lowItems.map((it) => `${it.name} (${Number(it.quantity)} left)`).join(", ")}</p>
+        <p>
+          Low Supply:{" "}
+          {lowItems
+            .map((it) => `${it.name} (${Number(it.quantity)} left)`)
+            .join(", ")}
+        </p>
       </div>
 
       <div className="inventory-header">
-        <div className="total-items"><p>Total items: {totalItems}</p></div>
-        <button className="add-new-item" onClick={openModal}>+ Add New Item</button>
+        <div className="total-items">
+          <p>Total items: {totalItems}</p>
+        </div>
+        <button className="add-new-item" onClick={openModal}>
+          + Add New Item
+        </button>
       </div>
 
       {loading ? (
@@ -179,11 +206,26 @@ export default function Inventory() {
           {items.map((it) => (
             <div key={it._id} className="item">
               <h4>{it.name}</h4>
-              <p>Stock: {it.quantity} {it.unit}</p>
-              {typeof it.price === "number" ? <p>₱{it.price} / {it.unit}</p> : <p>&nbsp;</p>}
+              <p>
+                Stock: {it.quantity} {it.unit}
+              </p>
+              {typeof it.price === "number" ? (
+                <p>
+                  ₱{it.price} / {it.unit}
+                </p>
+              ) : (
+                <p>&nbsp;</p>
+              )}
               <div className="buttons">
-                <button className="add" onClick={() => openEdit(it)}>Edit</button>
-                <button className="remove" onClick={() => openDeleteConfirm(it)}>Remove</button>
+                <button className="add" onClick={() => openEdit(it)}>
+                  Edit
+                </button>
+                <button
+                  className="remove"
+                  onClick={() => openDeleteConfirm(it)}
+                >
+                  Remove
+                </button>
               </div>
             </div>
           ))}
@@ -195,23 +237,68 @@ export default function Inventory() {
 
       {/* ADD MODAL */}
       {showModal && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
+        <div
+          className="modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+        >
           <div className="modal">
             <h2>Add New Item</h2>
             <p>Scan barcode or manually enter details:</p>
             <form onSubmit={handleSubmit}>
-              <input name="name" value={form.name} onChange={handleChange} required placeholder="Item Name" />
-              <input name="quantity" type="number" min="0" step="1" value={form.quantity} onChange={handleChange} required placeholder="Stock Quantity" />
-              <input name="price" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} placeholder="Price Per Unit" />
-              <select name="unit" value={form.unit} onChange={handleChange} required>
-                <option value="" disabled>Unit Type</option>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                placeholder="Item Name"
+              />
+              <input
+                name="quantity"
+                type="number"
+                min="0"
+                step="1"
+                value={form.quantity}
+                onChange={handleChange}
+                required
+                placeholder="Stock Quantity"
+              />
+              <input
+                name="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="Price Per Unit"
+              />
+              <select
+                name="unit"
+                value={form.unit}
+                onChange={handleChange}
+                required
+              >
+                <option value="" disabled>
+                  Unit Type
+                </option>
                 {unitOptions.map((u) => (
-                  <option key={u} value={u}>{u}</option>
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
                 ))}
               </select>
               <div className="modal-actions">
-                <button type="submit" className="primary">Add Item</button>
-                <button type="button" className="secondary" onClick={closeModal}>Cancel</button>
+                <button type="submit" className="primary">
+                  Add Item
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -220,7 +307,12 @@ export default function Inventory() {
 
       {/* EDIT MODAL */}
       {showEdit && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}>
+        <div
+          className="modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeEdit();
+          }}
+        >
           <div className="modal">
             <h2>Edit Item</h2>
             <form onSubmit={handleUpdate}>
@@ -256,14 +348,22 @@ export default function Inventory() {
                 onChange={handleEditChange}
                 required
               >
-                <option value="" disabled>Unit Type</option>
+                <option value="" disabled>
+                  Unit Type
+                </option>
                 {unitOptions.map((u) => (
-                  <option key={u} value={u}>{u}</option>
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
                 ))}
               </select>
               <div className="modal-actions">
-                <button type="submit" className="primary">Save Changes</button>
-                <button type="button" className="secondary" onClick={closeEdit}>Cancel</button>
+                <button type="submit" className="primary">
+                  Save Changes
+                </button>
+                <button type="button" className="secondary" onClick={closeEdit}>
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -281,11 +381,16 @@ export default function Inventory() {
           <div className="modal">
             <h2>Confirm Deletion</h2>
             <p>
-              Are you sure you want to remove <strong>{deleteTarget?.name}</strong>?
+              Are you sure you want to remove{" "}
+              <strong>{deleteTarget?.name}</strong>?
             </p>
             <div className="modal-actions">
-              <button className="remove" onClick={handleConfirmDelete}>Yes, Remove</button>
-              <button className="secondary" onClick={closeDeleteConfirm}>Cancel</button>
+              <button className="remove" onClick={handleConfirmDelete}>
+                Yes, Remove
+              </button>
+              <button className="secondary" onClick={closeDeleteConfirm}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>

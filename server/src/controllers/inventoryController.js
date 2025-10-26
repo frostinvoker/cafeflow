@@ -1,4 +1,3 @@
-// Inventory controllers: CRUD for stock items like milk, beans, cups.
 import Inventory from '../models/Inventory.js';
 
 export async function listInventory(req, res) {

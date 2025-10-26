@@ -15,6 +15,15 @@ const MenuItemSchema = new mongoose.Schema(
     // Quick toggle without deleting the item
     available: { type: Boolean, default: true },
 
+    ingredients: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Inventory', required: true }],
+      validate: {
+        validator(arr) { return Array.isArray(arr) && arr.length > 0; },
+        message: 'Select at least one ingredient.',
+      },
+      required: true,
+    },
+
     // Optional restriction list: if provided, only these AddOns can be used
     // with this menu item. If empty/missing, any active 'drink' add-ons are
     // allowed (still constrained by itemType === 'drink').
@@ -23,5 +32,5 @@ const MenuItemSchema = new mongoose.Schema(
   // Created/updated timestamps; skip __v
   { timestamps: true, versionKey: false }
 );
-
+MenuItemSchema.index({ ingredients: 1 });
 export default mongoose.model('MenuItem', MenuItemSchema);

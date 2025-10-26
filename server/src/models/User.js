@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema(
     status: {type: String, enum:["active","disabled"], default:"active" },
     passwordHash: { type: String, required: true },
   },
-  { timestamps: true, versionKey: false } // <-- add this
+  { timestamps: true, versionKey: false }
 );
 
 UserSchema.methods.setPassword = async function (password) {
