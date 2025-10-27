@@ -1,0 +1,16 @@
+.analytics-container p { margin-bottom: 1rem; color: #333; }
+.analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+.card { background: #fff; border: 1px solid #e6e6e6; padding: 1rem; border-radius: 8px; }
+.sales-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 420px; overflow: auto; }
+.sales-row { display: flex; align-items: center; gap: 0.5rem; }
+.sales-row .date { width: 110px; color: #333; font-size: 0.95rem; }
+.bar-wrap { flex: 1; background: #f3f4f6; height: 18px; border-radius: 6px; overflow: hidden; }
+.bar { height: 18px; background: linear-gradient(90deg,#006599,#58a6d8); border-radius: 6px 0 0 6px; }
+.amount { width: 120px; text-align: right; font-weight: 600; }
+.best-table { width: 100%; border-collapse: collapse; }
+.best-table th, .best-table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #f1f1f1; }
+.empty { padding: 1rem; color: #666; }
+
+@media (max-width: 900px) {
+  .analytics-grid { grid-template-columns: 1fr; }
+}

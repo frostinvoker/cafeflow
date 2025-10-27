@@ -1,3 +1,4 @@
+import Checkout from '../models/Checkout.js';
 import User from '../models/User.js';
 
 export async function changeMyPassword(req, res) {
@@ -91,6 +92,44 @@ export async function resetBaristaPassword(req, res) {
 
     return res.json({ message: 'Password reset' });
   } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// --- Analytics endpoints -------------------------------------------------
+export async function salesTrend(req, res) {
+  try {
+    const days = Math.max(1, Math.min(365, Number(req.query.days) || 30));
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - (days - 1));
+
+    const agg = await Checkout.aggregate([
+      { $match: { status: 'completed', createdAt: { $gte: since } } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, total: { $sum: "$total" } } },
+      { $sort: { _id: 1 } },
+    ]);
+
+    return res.json((agg || []).map(a => ({ date: a._id, total: a.total || 0 })));
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function bestSellers(req, res) {
+  try {
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 10));
+
+    const agg = await Checkout.aggregate([
+      { $match: { status: 'completed' } },
+      { $unwind: "$items" },
+      { $group: { _id: "$items.menuItem", name: { $first: "$items.name" }, qty: { $sum: "$items.quantity" }, revenue: { $sum: "$items.subtotal" } } },
+      { $sort: { qty: -1 } },
+      { $limit: limit },
+    ]);
+
+    return res.json((agg || []).map(a => ({ menuItemId: a._id, name: a.name, quantity: a.qty || 0, revenue: a.revenue || 0 })));
+  } catch (err) {
     return res.status(500).json({ message: 'Server error' });
   }
 }
