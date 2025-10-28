@@ -7,30 +7,52 @@ export default function DashboardLayout() {
   const location = useLocation();
   const [signingOut, setSigningOut] = useState(false);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // kept since it's actually used
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancel = false;
 
+    // Try to get cached user first
+    try {
+      const cachedUser = localStorage.getItem("user");
+      if (cachedUser) {
+        setUser(JSON.parse(cachedUser));
+        setLoading(false);
+      }
+    } catch (err) {
+      console.warn("Failed to read cached user:", err);
+    }
+
+    // Then verify with server
     (async () => {
       try {
         const res = await fetch("http://localhost:5000/api/auth/me", {
           credentials: "include",
         });
-        if (!res.ok) throw new Error("unauth");
-        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(res.status === 401 ? "unauthorized" : "server_error");
+        }
 
+        const data = await res.json();
         if (!cancel) {
           setUser(data.user);
           try {
             localStorage.setItem("user", JSON.stringify(data.user));
           } catch (err) {
-            // safely ignore localStorage errors
             console.warn("Failed to cache user:", err);
           }
         }
-      
-        if (!cancel) navigate("/login", { replace: true });
+      } catch (err) {
+        if (!cancel) {
+          if (err.message === "unauthorized") {
+            setUser(null);
+            localStorage.removeItem("user");
+            navigate("/login", { replace: true });
+          } else {
+            console.error("Auth check failed:", err);
+          }
+        }
       } finally {
         if (!cancel) setLoading(false);
       }
@@ -41,10 +63,9 @@ export default function DashboardLayout() {
     };
   }, [navigate]);
 
-  // Redirect baristas away from restricted routes
+  // Restrict barista access
   useEffect(() => {
     if (!user) return;
-    // Treat anything other than explicit 'manager' as restricted
     if (user.role === "manager") return;
 
     const path = location.pathname.toLowerCase();
@@ -72,14 +93,20 @@ export default function DashboardLayout() {
       setSigningOut(true);
 
       try {
-        await fetch("http://localhost:5000/api/auth/logout", {
+        const res = await fetch("http://localhost:5000/api/auth/logout", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
         });
+        
+        if (!res.ok) {
+          throw new Error("Logout request failed");
+        }
       } catch (err) {
         console.warn("Logout failed:", err);
       } finally {
+        // Always clear local state even if server logout fails
+        setUser(null);
         try {
           localStorage.removeItem("user");
         } catch (err) {
@@ -87,11 +114,7 @@ export default function DashboardLayout() {
         }
 
         setSigningOut(false);
-        try {
-          navigate("/login", { replace: true });
-        } catch {
-          window.location.assign("/login");
-        }
+        navigate("/login", { replace: true });
       }
     },
     [signingOut, navigate]
@@ -100,11 +123,8 @@ export default function DashboardLayout() {
   return (
     <div className="dashboard">
       <header className="header">
-        {/* your header SVG/logo elements */}
         <h1>blue52</h1>
-        <div className="notifications">
-          {/* your notification SVG */}
-        </div>
+        <div className="notifications">{/* your notification SVG */}</div>
         <div className="profile">
           <div className="profile-name">
             <p>{user?.name || ""}</p>
@@ -167,9 +187,7 @@ export default function DashboardLayout() {
           </nav>
         </aside>
 
-        <main>
-          {loading ? <p>Loading...</p> : <Outlet />}
-        </main>
+        <main>{loading ? <p>Loading...</p> : <Outlet />}</main>
       </div>
     </div>
   );

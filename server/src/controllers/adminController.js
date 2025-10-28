@@ -118,18 +118,77 @@ export async function salesTrend(req, res) {
 
 export async function bestSellers(req, res) {
   try {
-    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 10));
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 5));
+    const categories = ['Meals', 'Snacks', 'Drinks'];
 
+    // Get top sellers by category
     const agg = await Checkout.aggregate([
       { $match: { status: 'completed' } },
       { $unwind: "$items" },
-      { $group: { _id: "$items.menuItem", name: { $first: "$items.name" }, qty: { $sum: "$items.quantity" }, revenue: { $sum: "$items.subtotal" } } },
-      { $sort: { qty: -1 } },
-      { $limit: limit },
+      {
+        $lookup: {
+          from: 'menuitems',
+          localField: 'items.menuItem',
+          foreignField: '_id',
+          as: 'menuItem'
+        }
+      },
+      {
+        $unwind: '$menuItem'
+      },
+      {
+        $group: {
+          _id: {
+            menuItem: "$items.menuItem",
+            category: "$menuItem.category"  // Get category from MenuItem
+          },
+          name: { $first: "$items.name" },
+          category: { $first: "$menuItem.category" },
+          quantity: { $sum: "$items.quantity" },
+          revenue: { $sum: "$items.subtotal" }
+        }
+      },
+      {
+        $match: {
+          "category": { $in: categories }
+        }
+      },
+      {
+        $sort: { 
+          category: 1,
+          quantity: -1 
+        }
+      },
+      {
+        $group: {
+          _id: "$category",
+          items: {
+            $push: {
+              menuItemId: "$_id.menuItem",
+              name: "$name",
+              quantity: "$quantity",
+              revenue: "$revenue"
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          items: { $slice: ["$items", limit] }
+        }
+      }
     ]);
 
-    return res.json((agg || []).map(a => ({ menuItemId: a._id, name: a.name, quantity: a.qty || 0, revenue: a.revenue || 0 })));
+    // Ensure all categories are present in response
+    const result = categories.map(category => {
+      const found = agg.find(a => a._id === category);
+      return found || { _id: category, items: [] };
+    });
+
+    return res.json(result);
   } catch (err) {
+    console.error('Best sellers error:', err);
     return res.status(500).json({ message: 'Server error' });
   }
 }

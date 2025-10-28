@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/Login.css";
 
@@ -20,16 +20,18 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
         credentials: "include", 
       });
-      const data = await res.json();
-      if (res.ok) {
+      const data = await res.json().catch(() => ({ message: "Invalid response" }));
+      if (res.ok && data.user) {
         try {
           localStorage.setItem("user", JSON.stringify(data.user));
-        } catch {}
-        navigate("/"); // redirect to dashboard
+        } catch (err) {
+          console.warn("Failed to save user to localStorage:", err);
+        }
+        navigate(data.user.role === "manager" ? "/admin" : "/pos");
       } else {
         setError(data.message || "Login failed");
       }
-    } catch (err) {
+    } catch {
       setError("Network error");
     }
     setLoading(false);
