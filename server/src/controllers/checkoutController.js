@@ -38,9 +38,9 @@ export async function createCheckout(req, res) {
       customer: customerId,
       status = 'pending',
       paymentMethod = 'cash',
-      payment = {},             
+      payment = {},
       orderType = 'takeout',
-      redeemFreeDrink = false    
+      redeemFreeDrink = false
     } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -58,58 +58,75 @@ export async function createCheckout(req, res) {
 
     const isDrink = (mi) => (mi?.category || '').toLowerCase() === 'drinks';
 
-    // Build line item
+    // Build line items
     const lineItems = items.map((i) => {
+      // controllers/checkoutController.js (inside createCheckout, in the map over items)
       const doc = itemById.get(String(i.menuItem));
       if (!doc) throw new Error('Invalid or unavailable menu item');
       const qty = Math.max(1, Number(i.quantity) || 1);
 
-      // Add-ons
-      const requestedAddons = Array.isArray(i.addons) ? i.addons : [];
-      let addonsSnapshots = [];
-      if (requestedAddons.length > 0) {
-        if (!isDrink(doc)) throw new Error(`Add-ons only allowed for drinks: ${doc.name}`);
-        const allowed = (doc.allowedAddOns || []).map(id => id.toString());
-        addonsSnapshots = requestedAddons.map((aid) => {
-          const a = addonById.get(String(aid));
-          if (!a) throw new Error('Invalid or inactive add-on');
-          if (allowed.length > 0 && !allowed.includes(String(a._id))) {
-            throw new Error(`Add-on not allowed for ${doc.name}: ${a.name}`);
-          }
-          return { addon: a._id, name: a.name, price: a.price };
-        });
+      let unitPrice = 0;
+      let chosenSize;
+
+      // If it's a drink, require a size and use sizePrices
+      if (isDrink(doc)) {
+        const s = String(i.size || '').toLowerCase();
+        if (s !== '12oz' && s !== '16oz') {
+          throw new Error(`Drink requires size 12oz or 16oz: ${doc.name}`);
+        }
+        chosenSize = s;
+        const sp = doc.sizePrices || {};
+        unitPrice = s === '12oz' ? Number(sp.oz12) || 0 : Number(sp.oz16) || 0;
+      } else {
+        // Non-drinks: use single price; ignore any provided size
+        unitPrice = Number(doc.price) || 0;
       }
+
+      const addonsSnapshots = (Array.isArray(i.addons) ? i.addons : []).map((aid) => {
+      const a = addonById.get(String(aid));
+      if (!a) throw new Error('Invalid or inactive add-on');
+      return { addon: a._id, name: a.name, price: Number(a.price) || 0 };
+      });
 
       return {
         menuItem: doc._id,
         name: doc.name,
-        price: Number(doc.price) || 0,
+        price: unitPrice,
+        size: chosenSize,          // <-- keep it on the line for receipts/history
         quantity: qty,
         addons: addonsSnapshots,
-        lineDiscount: 0, 
-        subtotal: 0     
+        lineDiscount: 0,
+        subtotal: 0,
       };
     });
+
+    // ---- ENFORCE: redeem only if exactly 1 item AND it's a drink ----
+    const singleDrinkOnly =
+      lineItems.length === 1 &&
+      isDrink(itemById.get(String(lineItems[0].menuItem)));
 
     let pointsSpent = 0;
     if (redeemFreeDrink && customerId) {
       const cust = await Customer.findById(customerId).session(session);
-      if (cust && cust.loyaltyPoints >= 100) {
-        const drinkIndex = lineItems.findIndex(li => {
-          const src = itemById.get(String(li.menuItem));
-          return isDrink(src);
-        });
-        if (drinkIndex >= 0) {
-          const li = lineItems[drinkIndex];
-          const basePerUnit = Number(li.price) || 0; 
-          const perUnitDiscount = li.quantity > 0 ? basePerUnit / li.quantity : 0;
-          li.lineDiscount = Math.min(li.lineDiscount + perUnitDiscount, li.price);
-          pointsSpent = 100;
-        }
+
+      if (!(cust && cust.loyaltyPoints >= 100 && singleDrinkOnly)) {
+        // Choose one behavior:
+        // 1) HARD FAIL (strict):
+        // throw new Error('Free drink redemption requires exactly one drink item and at least 100 points.');
+        // 2) SOFT IGNORE (don’t redeem if not eligible):
+        // do nothing; pointsSpent remains 0
+      } else {
+        // Apply a discount equal to ONE base unit price (not add-ons) on that single drink line
+        const li = lineItems[0];
+        const basePerUnit = Number(li.price) || 0;
+        const perUnitDiscount = li.quantity > 0 ? basePerUnit / li.quantity : 0;
+        li.lineDiscount = Math.min(li.lineDiscount + perUnitDiscount, li.price);
+        pointsSpent = 100;
       }
     }
+    // ----------------------------------------------------------------
 
-    // Build customer snapshot
+    // Customer snapshot
     let customerSnapshot;
     if (customerId) {
       const cust = await Customer.findById(customerId).session(session);
@@ -139,9 +156,12 @@ export async function createCheckout(req, res) {
       checkout.payment.change = 0;
     }
 
-    const pointsEarned = Math.floor((checkout.total || 0) * 0.10);
+    // ---- NO EARNING WHEN REDEEMING ----
+    let pointsEarned = Math.floor((checkout.total || 0) * 0.10);
+    if (pointsSpent > 0) pointsEarned = 0;
     checkout.pointsEarned = pointsEarned;
-    checkout.pointsSpent = pointsSpent;
+    checkout.pointsSpent  = pointsSpent;
+    // -----------------------------------
 
     await checkout.save({ session });
 
@@ -162,6 +182,7 @@ export async function createCheckout(req, res) {
     session.endSession();
   }
 }
+
 
 export async function updateCheckout(req, res) {
   const session = await mongoose.startSession();

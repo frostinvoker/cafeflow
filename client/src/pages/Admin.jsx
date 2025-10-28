@@ -275,7 +275,7 @@ export default function Admin() {
 
                         <td className="buttons-barista">
                           <button
-                            className="disable-account"
+                                className={`disable-account ${isActive ? "is-active" : "is-disabled"}`}
                             onClick={() => handleToggleClick(u)}
                           >
                             {isActive ? "Disable" : "Enable"}

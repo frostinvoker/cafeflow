@@ -15,6 +15,7 @@ const AddOnSnapshotSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// models/Checkout.js
 const LineItemSchema = new mongoose.Schema(
   {
     menuItem: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
@@ -23,8 +24,8 @@ const LineItemSchema = new mongoose.Schema(
     quantity: { type: Number, required: true, min: 1, default: 1 },
     addons: { type: [AddOnSnapshotSchema], default: [] },
     lineDiscount: { type: Number, default: 0, min: 0 },
+    size: { type: String, enum: ['12oz', '16oz'], required: false }, // <-- add this
     subtotal: { type: Number, required: true, min: 0 },
-
   },
   { _id: false }
 );

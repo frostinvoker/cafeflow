@@ -2,55 +2,24 @@
     min-height: 100dvh;
     width: 100%;
     margin: 0;
-    padding: 1em 2em;
     display: grid;
     grid-template-rows: auto 1fr;
-    background: #006599;
 }
-.header{
-    display: inline-flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 1em;
-    margin-bottom: 1em;
-}
-.header h1{
-    color: #ffffff;
+.navbar nav h1{
+    color: #006599;
     font-weight: 800;
-    font-size: 2.6rem;
+    font-size: 2rem;
     margin: 0;
-}
-.profile{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5em;
 }
 
-.profile-name p{
-    margin: 0;
-    color: white;
-}
-.profile-name p:first-child{
-    font-size: 1.1rem;
-    font-weight: 700;
-}
-.profile-name p:last-child{
-    text-align: right;
-    font-size: 0.7rem;
-    font-weight: 500;
-}
 .header div:nth-last-child(2){
     margin-left: auto;
 }
 .container{
     display: grid;
-    grid-template-columns: 2fr 8fr;
-    gap: 2em;
-    box-sizing: border-box;
+    grid-template-columns: 20ch 1fr;
     align-items: stretch;
-    min-height: 0;
+    height: 100vh;
 }
 .container aside{
     min-width: 0;
@@ -59,21 +28,73 @@
 }
 
 .container main{
+    padding-top: 0.5em;
     min-width: 0;
     justify-self: stretch;
     align-self: stretch;
 }
 
 .navbar{
-    background: white;   
-    padding: 2em 3em 4em 1em;
-    border-radius: 30px;
+    background: white;
+    padding: 1em 0 0 0;
+}
+.navbar .collapse-btn{
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.navbar .collapse-btn img{
+    width: 22px;
+    height: 22px;
 }
 .navbar nav{
     display: flex;
     flex-direction: column;
     gap: 0.5em;
+    width: 100%;
     height:100%;
+}
+.navbar nav .logo-brand-container{
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0 1em;
+    border-bottom: 1px solid #F1F5F9;
+}
+.navbar.is-collapsed nav .logo-brand-container{
+    justify-content: center;
+}
+.navbar nav .nav-items{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: auto;
+    padding: 1em;
+    gap: 1em;
+}
+.navbar nav .nav-items .nav-item{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5em;
+}
+.navbar nav .nav-items .nav-item p{
+    margin: 0;
+}
+.navbar.is-collapsed nav .nav-items{
+    padding: 0.5em;
+    align-items: center;
+}
+.navbar.is-collapsed nav .nav-items .nav-item{
+    justify-content: center;
+}
+.navbar.is-collapsed nav .nav-items .nav-item p{
+    display: none;
 }
 .navbar nav button{
     cursor: pointer;
@@ -85,15 +106,42 @@
     font-size: 1rem;
     padding: 1em;
 }
-.navbar nav button:last-child {
-  margin-top: auto;
-}
-
-main{
+.navbar .header-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     padding: 1.5em;
-    background: #ffffff;
+    border-top: 1px solid #F1F5F9;
+}
+.navbar.is-collapsed .header-footer{
+    justify-content: center;
+}
+.navbar .header-footer .profile{
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.navbar .header-footer .profile p{
+    margin: 0;
     color: black;
-    border-radius: 30px;
+}
+.navbar .header-footer .profile p:last-child{
+    font-size: 0.8rem;
+    color: #8D8D8D;
+}
+.navbar .header-footer span{
+    margin-left: auto;
+    cursor: pointer;
+}
+.navbar.is-collapsed .header-footer .profile{
+    display: none;
+}
+.navbar.is-collapsed .header-footer span{
+    margin-left: 0;
+}
+main{
+    background: #F8FAFC;
+    color: black;
     box-sizing: border-box;
     min-width: 0;
     min-height: 0;

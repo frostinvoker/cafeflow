@@ -1,6 +1,5 @@
 .add-customer{
   padding: 0.7em;
-  background: #006599;
   color: #fff;
   border: none;
   font-family: Poppins, sans-serif;
@@ -14,13 +13,13 @@ table{
     margin-top: 1em;
     max-height: 30ch;
     overflow-y: auto;
+    box-shadow: 0 1px 0.5px 1 rgba(0,0,0,0.5);
 }
 .table-header{
-    background-color: #006599;
+    background-color: #F1F5F9;
 }
 .table-header th{
     text-align: left;
-    color: white;
     font-weight: 600;
     padding: 0.7em 1em;
 }
@@ -28,24 +27,18 @@ table{
     text-align: left;
     font-weight: 500;
     padding: 0.7em 1em;
-}
-.customer tbody tr:nth-child(odd){
     background: white;
-}
-.customer tbody tr:nth-child(even){
-    background: #F2F6F8;
-}
-.table-body td:nth-child(3){
-    color: #006599;
-    font-weight: 600;
-}
-.table-body .buttons{
-    display: inline-flex;
-    flex-direction: row;
-    gap: 1em;
+    border-bottom: 2px solid #F1F5F9 ;
 }
 
-.table-body .buttons button{
+.table-body .table-buttons{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5em;
+}
+
+.table-body .table-buttons button{
     border: none;
     font-family: Poppins, sans-serif;
     border-radius: 5px;
@@ -53,12 +46,12 @@ table{
     cursor: pointer;
 }
 
-.table-body .buttons .edit{
+.table-body .table-buttons .edit{
     background-color: #4CAF50;
 }
 
-.table-body .buttons .remove{
-    background-color: #FF4D4D;
+.table-body .table-buttons .remove{
+    background-color: #F87171
 }
 
 .modal-overlay{
@@ -109,7 +102,6 @@ table{
 }
 
 .modal-actions .primary{
-  background: #006599;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -127,7 +119,7 @@ table{
 }
 
 .modal-actions .remove {
-  background: #FF4D4D;
+  background: #F87171;
   color: #fff;
   border: none;
   border-radius: 10px;

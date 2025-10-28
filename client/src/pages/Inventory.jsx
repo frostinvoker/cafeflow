@@ -6,16 +6,15 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ADD modal state
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     name: "",
     quantity: "",
     price: "",
     unit: "",
+    lowStockThreshold: "",
   });
 
-  // EDIT modal state
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState({
     _id: "",
@@ -23,15 +22,15 @@ export default function Inventory() {
     quantity: "",
     price: "",
     unit: "pc",
+    lowStockThreshold: "",
   });
 
-  // DELETE confirm state  ✅ (these were missing)
   const [showDelete, setShowDelete] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const unitOptions = useMemo(() => ["pc", "grams", "kg", "ml", "liters"], []);
+  const defaultThreshold = 3;
 
-  // Load inventory
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -53,9 +52,8 @@ export default function Inventory() {
     };
   }, []);
 
-  // --- ADD modal handlers ---
   const openModal = () => {
-    setForm({ name: "", quantity: "", price: "", unit: "" });
+    setForm({ name: "", quantity: "", price: "", unit: "", lowStockThreshold: "" });
     setShowModal(true);
   };
   const closeModal = () => setShowModal(false);
@@ -75,6 +73,7 @@ export default function Inventory() {
       quantity: Number(form.quantity) || 0,
     };
     if (form.price !== "") body.price = Number(form.price) || 0;
+    if (form.lowStockThreshold !== "") body.lowStockThreshold = Math.max(0, Number(form.lowStockThreshold) || 0);
 
     try {
       const res = await fetch("http://localhost:5000/api/inventory", {
@@ -92,15 +91,14 @@ export default function Inventory() {
     }
   };
 
-  // --- EDIT modal handlers ---
   const openEdit = (it) => {
     setEditForm({
       _id: it._id,
       name: it.name ?? "",
       quantity: String(it.quantity ?? ""),
-      price:
-        it.price !== undefined && it.price !== null ? String(it.price) : "",
+      price: it.price !== undefined && it.price !== null ? String(it.price) : "",
       unit: it.unit ?? "pc",
+      lowStockThreshold: it.lowStockThreshold !== undefined && it.lowStockThreshold !== null ? String(it.lowStockThreshold) : "",
     });
     setShowEdit(true);
   };
@@ -121,6 +119,7 @@ export default function Inventory() {
       quantity: Number(editForm.quantity) || 0,
     };
     if (editForm.price !== "") body.price = Number(editForm.price) || 0;
+    if (editForm.lowStockThreshold !== "") body.lowStockThreshold = Math.max(0, Number(editForm.lowStockThreshold) || 0);
 
     try {
       const res = await fetch(
@@ -144,7 +143,6 @@ export default function Inventory() {
     }
   };
 
-  // --- DELETE confirm handlers ---
   const openDeleteConfirm = (item) => {
     setDeleteTarget(item);
     setShowDelete(true);
@@ -170,9 +168,11 @@ export default function Inventory() {
     }
   };
 
-  // Derived
   const totalItems = items.length;
-  const lowItems = items.filter((it) => Number(it.quantity) <= 4);
+  const lowItems = items.filter((it) => {
+    const t = Number(it.lowStockThreshold) > 0 ? Number(it.lowStockThreshold) : defaultThreshold;
+    return Number(it.quantity) <= t;
+  });
   const hasLow = !loading && !error && lowItems.length > 0;
 
   return (
@@ -183,7 +183,10 @@ export default function Inventory() {
         <p>
           Low Supply:{" "}
           {lowItems
-            .map((it) => `${it.name} (${Number(it.quantity)} left)`)
+            .map((it) => {
+              const t = Number(it.lowStockThreshold) > 0 ? Number(it.lowStockThreshold) : defaultThreshold;
+              return `${it.name} (${Number(it.quantity)} ${it.unit})`;
+            })
             .join(", ")}
         </p>
       </div>
@@ -235,7 +238,6 @@ export default function Inventory() {
         </div>
       )}
 
-      {/* ADD MODAL */}
       {showModal && (
         <div
           className="modal-overlay"
@@ -288,6 +290,15 @@ export default function Inventory() {
                   </option>
                 ))}
               </select>
+              <input
+                name="lowStockThreshold"
+                type="number"
+                min="0"
+                step="1"
+                value={form.lowStockThreshold}
+                onChange={handleChange}
+                placeholder="Insert Quantity for Low Supply Alert"
+              />
               <div className="modal-actions">
                 <button type="submit" className="primary">
                   Add Item
@@ -305,7 +316,6 @@ export default function Inventory() {
         </div>
       )}
 
-      {/* EDIT MODAL */}
       {showEdit && (
         <div
           className="modal-overlay"
@@ -357,6 +367,15 @@ export default function Inventory() {
                   </option>
                 ))}
               </select>
+              <input
+                name="lowStockThreshold"
+                type="number"
+                min="0"
+                step="1"
+                value={editForm.lowStockThreshold}
+                onChange={handleEditChange}
+                placeholder="Insert Quantity for Low Supply Alert"
+              />
               <div className="modal-actions">
                 <button type="submit" className="primary">
                   Save Changes
@@ -370,7 +389,6 @@ export default function Inventory() {
         </div>
       )}
 
-      {/* DELETE CONFIRM MODAL */}
       {showDelete && (
         <div
           className="modal-overlay"

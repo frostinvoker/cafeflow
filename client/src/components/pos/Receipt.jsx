@@ -65,10 +65,6 @@ export default function Receipt() {
           <h2>Payment Successful!</h2>
           <div className="orders">
             {checkout.items.map((li) => {
-              const addonsText =
-                li.addons && li.addons.length > 0
-                  ? " + " + li.addons.map((a) => a.name).join(", ")
-                  : "";
               const lineTotal =
                 (li.price +
                   (li.addons || []).reduce((s, a) => s + (a.price || 0), 0)) *
@@ -77,23 +73,47 @@ export default function Receipt() {
                 <div key={li.menuItem} className="order-item">
                   <div className="order-name-qty">
                     <p>
-                      {li.name} x{li.quantity}
+                      {li.name}{li.size ? ` (${li.size})` : ""} x{li.quantity}
                     </p>
                     <p>{formatPHP(lineTotal)}</p>
                   </div>
-                  <div className="order-addons">
-                    <small>{addonsText}</small>
-                  </div>
+                  {li.addons && li.addons.length > 0 && (
+                    <div className="order-addons">
+                      {li.addons.map((a, index) => (
+                        <small key={index}>+ {a.name}</small>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
+          </div>
+          <div className="payment-info">
             <div className="total">
-              <h3>Total</h3>
+              <h3>Total:</h3>
               <h3>{formatPHP(checkout.total)}</h3>
+            </div>
+            <div className="total">
+              <h4>Cash received:</h4>
+              <h4>{formatPHP(checkout.payment.tendered)}</h4>
+            </div>
+            <div className="total">
+              <h4>Change:</h4>
+              <h4>{formatPHP(checkout.payment.change)}</h4>
             </div>
             <div className="payment">
               <p>Payment Method:</p>
               <p>{checkout.paymentMethod}</p>
+            </div>
+          </div>
+          <div className="loyaltypts-info">
+            <div className="total">
+              <h4>Customer:</h4>
+              <h4>{checkout?.customerSnapshot?.name?.trim() || "none"}</h4>
+            </div>
+            <div className="total">
+              <h4>Points Received:</h4>
+              <h4>{checkout.pointsEarned}</h4>
             </div>
           </div>
           <div className="buttons">

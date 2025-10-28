@@ -1,0 +1,39 @@
+.lowstock-toast {
+  position: fixed;
+  right: 1ch;
+  bottom: 1ch;
+  width: 35ch;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  color: black;
+  z-index: 9999;
+}
+.lowstock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7em 1em;
+  font-size: 14px;
+  background: #f1f5f9;
+  color: #47556E;
+}
+.lowstock-header button {
+  border: 0;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.lowstock-body {
+  padding: 0.7em 1em;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+.lowstock-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3em 0;
+  font-size: 0.9rem;
+}

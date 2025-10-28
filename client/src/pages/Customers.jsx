@@ -181,7 +181,7 @@ export default function Customers() {
                 <td>{it.name}</td>
                 <td>{it.email}</td>
                 <td>{it.loyaltyPoints ?? 0}</td>
-                <td className="buttons">
+                <td className="table-buttons">
                   <button className="edit" onClick={() => openEditCustomer(it)}>
                     Edit
                   </button>

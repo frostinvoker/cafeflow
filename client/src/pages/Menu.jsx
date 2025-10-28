@@ -10,13 +10,21 @@ export default function Menu() {
   const [inventory, setInventory] = useState([]);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState([]);
   const [showAddMenu, setShowAddMenu] = useState(false);
-  const [form, setForm] = useState({ name: "", category: "", price: "" });
+  const [form, setForm] = useState({
+    name: "",
+    category: "",
+    price: "",       
+    size12: "",         
+    size16: "",         
+  });
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState({
     _id: "",
     name: "",
     category: "",
     price: "",
+    size12: "",
+    size16: "",
     available: true,
   });
   const [editSelectedIngredientIds, setEditSelectedIngredientIds] = useState(
@@ -56,6 +64,7 @@ export default function Menu() {
   const [showDeleteAddOn, setShowDeleteAddOn] = useState(false);
   const [deleteAddOnTarget, setDeleteAddOnTarget] = useState(null);
   const categoryOptions = useMemo(() => ["Drinks", "Snacks", "Meals"], []);
+  
 
   const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
   const formatPHP = (n) =>
@@ -99,6 +108,27 @@ export default function Menu() {
       cancel = true;
     };
   }, []);
+
+    // clear the opposite fields when ADD form category changes
+  useEffect(() => {
+    const isDrink = (form.category || "").toLowerCase() === "drinks";
+    setForm(f => isDrink
+      ? { ...f, price: "" }                  // drinks: no single price
+      : { ...f, size12: "", size16: "" }     // non-drinks: no size prices
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.category]);
+
+  // clear the opposite fields when EDIT form category changes
+  useEffect(() => {
+    const isDrink = (editForm.category || "").toLowerCase() === "drinks";
+    setEditForm(f => isDrink
+      ? { ...f, price: "" }
+      : { ...f, size12: "", size16: "" }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editForm.category]);
+
   useEffect(() => {
     let cancel = false;
     const needInventory =
@@ -171,9 +201,10 @@ export default function Menu() {
   };
   // Handlers
   const openAddMenu = () => {
-    setForm({ name: "", category: "", price: "" });
+    setForm({ name: "", category: "", price: "", size12: "", size16: "" });
     setShowAddMenu(true);
   };
+
   useEffect(() => {
     let cancel = false;
     if (!showAddMenu) return;
@@ -212,11 +243,21 @@ export default function Menu() {
         throw new Error("Please select at least one ingredient.");
       }
 
+      const isDrink = (form.category || "").toLowerCase() === "drinks";
       const body = {
         name: form.name.trim(),
         category: form.category,
-        price: Number(form.price) || 0,
-        ingredients: selectedIngredientIds, 
+        ingredients: selectedIngredientIds,
+        ...(isDrink
+          ? {
+              sizePrices: {
+                oz12: Number(form.size12),
+                oz16: Number(form.size16),
+              },
+            }
+          : {
+              price: Number(form.price) || 0,
+            }),
       };
 
       const res = await fetch("http://localhost:5000/api/menu-items", {
@@ -241,16 +282,20 @@ export default function Menu() {
   };
 
   const openEditMenu = (item) => {
+    const isDrink = (item.category || "").toLowerCase() === "drinks";
     setEditForm({
       _id: item._id,
       name: item.name,
       category: item.category,
-      price: String(item.price ?? ""),
+      price: String(item.price ?? ""), // non-Drinks
+      size12: isDrink ? String(item.sizePrices?.oz12 ?? "") : "",
+      size16: isDrink ? String(item.sizePrices?.oz16 ?? "") : "",
       available: !!item.available,
     });
     setEditSelectedIngredientIds(item.ingredients || []);
     setShowEdit(true);
   };
+
   const closeEditMenu = () => setShowEdit(false);
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -262,16 +307,27 @@ export default function Menu() {
   const handleUpdateItem = async (e) => {
     e.preventDefault();
     try {
-      const priceNum = Number(editForm.price);
-      if (Number.isNaN(priceNum) || priceNum < 0)
-        throw new Error("Enter a valid price");
+      const isDrink = (editForm.category || "").toLowerCase() === "drinks";
+
       const body = {
         name: editForm.name.trim(),
         category: editForm.category,
-        price: priceNum,
         available: !!editForm.available,
         ingredients: editSelectedIngredientIds,
+        ...(isDrink
+          ? {
+              // ensure numbers
+              sizePrices: {
+                oz12: Number(editForm.size12),
+                oz16: Number(editForm.size16),
+              },
+              // ensure we do NOT send price for drinks (so schema stays clean)
+            }
+          : {
+              price: Number(editForm.price) || 0,
+            }),
       };
+
       const res = await fetch(
         `http://localhost:5000/api/menu-items/${editForm._id}`,
         {
@@ -289,6 +345,7 @@ export default function Menu() {
       setError(err.message || "Failed to update item");
     }
   };
+
 
   const openDeleteConfirm = (item) => {
     setDeleteTarget(item);
@@ -452,21 +509,25 @@ export default function Menu() {
           <tr key={it._id} className="table-body">
             <td>{it.name}</td>
             <td>{cap(it.category)}</td>
-            <td>{formatPHP(it.price)}</td>
+            <td>
+              {((it.category || "").toLowerCase() === "drinks")
+                ? `${formatPHP(Number(it.sizePrices?.oz12 ?? 0))} / ${formatPHP(Number(it.sizePrices?.oz16 ?? 0))}`
+                : formatPHP(Number(it.price) || 0)}
+            </td>
             <td
               className={`availability ${
-                it.availableComputed ?? it.available
+                (it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true)))
                   ? "available"
                   : "unavailable"
               }`}
             >
               <span className="badge">
-                {it.availableComputed ?? it.available
+                {(it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true)))
                   ? "Available"
                   : "Not Available"}
               </span>
             </td>
-            <td className="buttons">
+            <td className="table-buttons">
               <button className="edit" onClick={() => openEditMenu(it)}>
                 Edit
               </button>
@@ -492,8 +553,8 @@ export default function Menu() {
       <thead>
         <tr className="table-header">
           <th>Name</th>
-          <th>Price</th>
           <th>Category</th>
+          <th>Price</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -513,7 +574,7 @@ export default function Menu() {
                 {a.active ? "Available" : "Not Available"}
               </span>
             </td>
-            <td className="buttons">
+            <td className="table-buttons">
               <button className="edit" onClick={() => openEditAddOn(a)}>
                 Edit
               </button>
@@ -556,9 +617,9 @@ export default function Menu() {
 
       {/* HEADER BUTTONS */}
       <div className="header-buttons">
-        <button onClick={openAddMenu}>Add New Item</button>
+        <button onClick={openAddMenu}>+ Add New Item</button>
         {activeTab === "Add-on" && (
-          <button onClick={openAddOnModal}>Add New Add-On</button>
+          <button onClick={openAddOnModal}>+ Add New Add-On</button>
         )}
       </div>
 
@@ -606,15 +667,41 @@ export default function Menu() {
                   </option>
                 ))}
               </select>
-              <input
-                name="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.price}
-                onChange={handleChange}
-                placeholder="Price (₱)"
-              />
+              {(form.category || "").toLowerCase() === "drinks" ? (
+                <div className="size-selector">
+                  <input
+                    name="size12"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.size12}
+                    onChange={handleChange}
+                    placeholder="Price 12oz (₱)"
+                    required
+                  />
+                  <input
+                    name="size16"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.size16}
+                    onChange={handleChange}
+                    placeholder="Price 16oz (₱)"
+                    required
+                  />
+                </div>
+              ) : (
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.price}
+                  onChange={handleChange}
+                  placeholder="Price (₱)"
+                  required
+                />
+              )}
               <div className="ingredient-summary-row">
                 <button
                   type="button"
@@ -678,25 +765,47 @@ export default function Menu() {
                 onChange={handleEditChange}
                 required
               >
-                <option value="" disabled>
-                  Select Category
-                </option>
+                <option value="" disabled>Select Category</option>
                 {categoryOptions.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
+                  <option key={u} value={u}>{u}</option>
                 ))}
               </select>
-              <input
-                name="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={editForm.price}
-                onChange={handleEditChange}
-                placeholder="Price (₱)"
-                required
-              />
+
+              {(editForm.category || "").toLowerCase() === "drinks" ? (
+                <div className="size-selector">
+                  <input
+                    name="size12"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editForm.size12}
+                    onChange={handleEditChange}
+                    placeholder="Price 12oz (₱)"
+                    required
+                  />
+                  <input
+                    name="size16"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editForm.size16}
+                    onChange={handleEditChange}
+                    placeholder="Price 16oz (₱)"
+                    required
+                  />
+                </div>
+              ) : (
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editForm.price}
+                  onChange={handleEditChange}
+                  placeholder="Price (₱)"
+                  required
+                />
+              )}
               <label className="checkbox-availability">
                 <input
                   type="checkbox"

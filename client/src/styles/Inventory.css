@@ -4,13 +4,12 @@ h2{
 .default-container {
     display: flex;
     flex-direction: column;
-    border-radius: 20px;
     padding: 1em 1.5em;
     min-width: 0;
-    justify-self: stretch;
-    align-self: stretch;
+    height: 100%;
 }
 .low-supply-alert{
+  margin: 1em 0em;
   display: none;
 }
 .low-supply-alert.show{
@@ -27,21 +26,19 @@ h2{
 .inventory-header{
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 .inventory-header p{
     background-color: #D1E3ED;
-    color: #006599;
     padding: 0.5em 0.5em;
     border-radius: 15px;
 }
-
 .inventory-header button{
-  margin: 1em 0 1em auto;
-  padding: 0em 0.5em;
-  background: #006599;
+  margin-left: auto;
+  padding: 0.5em;
   color: #fff;
   border: none;
-  border-radius: 15px;
+  border-radius: 10px;
   font-weight: 500;
   font-family: Poppins, sans-serif;
   cursor: pointer;
@@ -49,37 +46,34 @@ h2{
 }
 
 .inventory-list{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1em;
+    padding: 1em 0.1em 0.1em 0.1em;
     overflow-y: auto;
-    min-height: 15ch;
-    max-height: 45vh;
-    padding: 0.5em;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20ch, 1fr));
+    gap: 1em;
+    align-content: start;
 }
 
 .inventory-list .item{
-    width: 25ch;
     display: flex;
     flex-direction: column;
     background: white;
     box-shadow: 0 0 20px -8px rgba(0,0,0,0.25);
-    height: 15ch;
-    justify-content: center;
-    align-items: center;
     padding: 1em;
     border-radius: 15px;
 }
 
 .inventory-list .item p, .inventory-list .item h4{
     margin: 0;
+    color: #47556E;
 }
 
-.inventory-list .buttons{
+.inventory-list .item .buttons{
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 0.4em;
     justify-content: center;
+    margin-top: 0.5em;
 }
 
 .inventory-list .item .buttons button{
@@ -93,7 +87,7 @@ h2{
     background-color: #4CAF50;
 }
 .inventory-list .item .buttons .remove{
-    background-color: #FF4D4D;
+    background-color: #F87171;
 }
 
 
@@ -145,7 +139,6 @@ h2{
 }
 
 .modal-actions .primary{
-  background: #006599;
   color: #fff;
   border: none;
   border-radius: 10px;

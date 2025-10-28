@@ -14,6 +14,7 @@ export default function Pos() {
   const [configItem, setConfigItem] = useState(null);
   const [configQty, setConfigQty] = useState(1);
   const [configAddonIds, setConfigAddonIds] = useState([]);
+  const [configSize, setConfigSize] = useState("12oz");
 
   const navigate = useNavigate();
 
@@ -84,12 +85,18 @@ export default function Pos() {
 
   // Open config modal for a product
   const openConfig = (it) => {
-    if (!it.available) return;
+    const avail = Boolean(
+      it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true))
+    );
+    if (!avail) return;
+
     setConfigItem(it);
     setConfigQty(1);
-    setConfigAddonIds([]); // start with nothing selected
+    setConfigAddonIds([]);
+    setConfigSize("12oz");
     setShowConfig(true);
   };
+
   const closeConfig = () => setShowConfig(false);
 
   // Add-ons available for the current item (by category + allowedAddOns)
@@ -124,6 +131,14 @@ export default function Pos() {
     const chosen = selectableAddons.filter((a) =>
       configAddonIds.includes(String(a._id))
     );
+
+    const isDrink = (configItem.category || "").toLowerCase() === "drinks";
+    const basePrice = isDrink
+      ? (configSize === "16oz"
+          ? Number(configItem.sizePrices?.oz16) || 0
+          : Number(configItem.sizePrices?.oz12) || 0)
+      : Number(configItem.price) || 0;
+
     const line = {
       lineId:
         window.crypto && crypto.randomUUID
@@ -132,7 +147,8 @@ export default function Pos() {
       menuItemId: configItem._id,
       name: configItem.name,
       category: configItem.category,
-      basePrice: Number(configItem.price) || 0,
+      size: isDrink ? configSize : undefined,      // <-- keep size on the line
+      basePrice,
       quantity: Number(configQty) || 1,
       addons: chosen.map((a) => ({
         _id: a._id,
@@ -144,6 +160,7 @@ export default function Pos() {
     setOrder((prev) => [...prev, line]);
     setShowConfig(false);
   };
+
 
   // Remove a line from order
   const removeFromOrder = (lineId) => {
@@ -167,11 +184,13 @@ export default function Pos() {
       menuItem: li.menuItemId,
       quantity: li.quantity,
       addons: (li.addons || []).map((a) => a._id),
+      size: li.size, // <-- include for drinks
     }));
     const state = { order, itemsPayload, total };
     localStorage.setItem("posOrder", JSON.stringify(state));
     navigate("/pos/checkout", { state });
   };
+
 
   return (
     <div className="pos-container">
@@ -184,27 +203,30 @@ export default function Pos() {
         ) : (
           <div className="product-list">
             {items.map((it) => {
-              const isAvailable = Boolean(it.availableComputed ?? it.available); // ← use computed if present
+              const isAvailable = Boolean(
+                it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true))
+              );
               const disabled = !isAvailable;
 
               return (
                 <div
                   key={it._id}
-                  className={`product ${
-                    disabled ? "is-unavailable" : "is-available"
-                  }`}
+                  className={`product ${disabled ? "is-unavailable" : "is-available"}`}
                   role="button"
                   tabIndex={disabled ? -1 : 0}
                   aria-disabled={disabled}
                   onClick={() => openConfig(it)}
                   onKeyDown={(e) => {
-                    if (!disabled && (e.key === "Enter" || e.key === " "))
-                      openConfig(it);
+                    if (!disabled && (e.key === "Enter" || e.key === " ")) openConfig(it);
                   }}
                 >
                   <div className={shapeClass(it.category)} />
                   <p className="name">{it.name}</p>
-                  <h4 className="price">{formatPHP(Number(it.price) || 0)}</h4>
+                  <h4 className="price">
+                    {((it.category || "").toLowerCase() === "drinks")
+                      ? `${formatPHP(Number(it.sizePrices?.oz12 ?? 0))} / ${formatPHP(Number(it.sizePrices?.oz16 ?? 0))}`
+                      : formatPHP(Number(it.price) || 0)}
+                  </h4>
                   <small className={`availability ${disabled ? "na" : "ok"}`}>
                     {disabled ? "Not Available" : "Available"}
                   </small>
@@ -222,10 +244,6 @@ export default function Pos() {
         <h2>Current Order</h2>
         <div className="order-lines">
           {order.map((li) => {
-            const addonsText =
-              li.addons && li.addons.length > 0
-                ? " + " + li.addons.map((a) => a.name).join(", ")
-                : "";
             const lineTotal =
               (li.basePrice +
                 (li.addons || []).reduce((s, a) => s + (a.price || 0), 0)) *
@@ -234,7 +252,7 @@ export default function Pos() {
               <div key={li.lineId} className="ordered-item">
                 <div className="order-name-qty">
                   <p>
-                    {li.name} x{li.quantity}
+                    {li.name}{li.size ? ` (${li.size})` : ""} x{li.quantity}
                   </p>
                   <p>{formatPHP(lineTotal)}</p>
                 </div>
@@ -255,9 +273,13 @@ export default function Pos() {
                     />
                   </svg>
                 </div>
-                <div className="order-addons">
-                  <small>{addonsText}</small>
-                </div>
+                {li.addons && li.addons.length > 0 && (
+                  <div className="order-addons">
+                    {li.addons.map((a, index) => (
+                      <small key={index}>+ {a.name}</small>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -287,7 +309,33 @@ export default function Pos() {
         >
           <div className="modal-order">
             <h2>{configItem.name}</h2>
-
+            {(configItem.category || "").toLowerCase() === "drinks" && (
+              <div className="modal-order-size">
+                <label>Size</label>
+                <div className="size-choices">
+                  <label>
+                    <input
+                      type="radio"
+                      name="size"
+                      value="12oz"
+                      checked={configSize === "12oz"}
+                      onChange={() => setConfigSize("12oz")}
+                    />
+                    12oz
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="size"
+                      value="16oz"
+                      checked={configSize === "16oz"}
+                      onChange={() => setConfigSize("16oz")}
+                    />
+                    16oz
+                  </label>
+                </div>
+              </div>
+            )}
             <div className="modal-order-qty">
               <label>Quantity</label>
               <input

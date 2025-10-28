@@ -59,3 +59,27 @@ export async function deleteInventoryItem(req, res) {
   }
 }
 
+export async function listLowStockInventory(req, res) {
+  try {
+    const defaultT = Math.max(0, Number(req.query.threshold ?? 3));
+    const items = await Inventory.aggregate([
+      {
+        $addFields: {
+          effectiveThreshold: {
+            $cond: [
+              { $gt: ['$lowStockThreshold', 0] }, // per-item override
+              '$lowStockThreshold',
+              defaultT
+            ]
+          }
+        }
+      },
+      { $match: { $expr: { $lte: ['$quantity', '$effectiveThreshold'] } } },
+      { $project: { name: 1, quantity: 1, unit: 1, lowStockThreshold: 1 } },
+      { $sort: { quantity: 1, name: 1 } }
+    ]);
+    res.json({ threshold: defaultT, items });
+  } catch {
+    res.status(500).json({ message: 'Failed to list low-stock items' });
+  }
+}
