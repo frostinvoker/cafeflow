@@ -115,7 +115,7 @@ h2{
 .modal form{
   width: 100%;
   display: grid;
-  gap: 1em;
+  gap: 0.5em;
 }
 
 .modal input, .modal select{

@@ -9,7 +9,6 @@ export default function Pos() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // Config modal state
   const [showConfig, setShowConfig] = useState(false);
   const [configItem, setConfigItem] = useState(null);
   const [configQty, setConfigQty] = useState(1);
@@ -26,7 +25,6 @@ export default function Pos() {
         }).format(n)
       : "—";
 
-  // UI only
   const shapeClass = (cat) => {
     switch (cat) {
       case "Drinks":
@@ -40,7 +38,6 @@ export default function Pos() {
     }
   };
 
-  // Load menu items
   useEffect(() => {
     const abort = new AbortController();
     (async () => {
@@ -61,7 +58,6 @@ export default function Pos() {
     return () => abort.abort();
   }, []);
 
-  // Load all active add-ons once (filter per item later)
   useEffect(() => {
     const abort = new AbortController();
     (async () => {
@@ -83,7 +79,6 @@ export default function Pos() {
     return () => abort.abort();
   }, []);
 
-  // Open config modal for a product
   const openConfig = (it) => {
     const avail = Boolean(
       it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true))
@@ -99,17 +94,13 @@ export default function Pos() {
 
   const closeConfig = () => setShowConfig(false);
 
-  // Add-ons available for the current item (by category + allowedAddOns)
   const selectableAddons = useMemo(() => {
     if (!configItem) return [];
     let list = addons.filter((a) => a.active !== false);
-
-    // Match add-on category to the menu item's category
     if (configItem.category) {
       list = list.filter((a) => a.category === configItem.category);
     }
 
-    // Enforce allowedAddOns if the menu item restricts
     const allowed = (configItem.allowedAddOns || []).map(String);
     if (allowed.length > 0) {
       list = list.filter((a) => allowed.includes(String(a._id)));
@@ -117,14 +108,12 @@ export default function Pos() {
     return list;
   }, [addons, configItem]);
 
-  // Toggle an add-on in the current config
   const toggleAddon = (id) => {
     setConfigAddonIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
-  // Add configured line to order
   const addConfiguredLine = () => {
     if (!configItem) return;
 
@@ -147,7 +136,7 @@ export default function Pos() {
       menuItemId: configItem._id,
       name: configItem.name,
       category: configItem.category,
-      size: isDrink ? configSize : undefined,      // <-- keep size on the line
+      size: isDrink ? configSize : undefined,  
       basePrice,
       quantity: Number(configQty) || 1,
       addons: chosen.map((a) => ({
@@ -161,13 +150,10 @@ export default function Pos() {
     setShowConfig(false);
   };
 
-
-  // Remove a line from order
   const removeFromOrder = (lineId) => {
     setOrder((prev) => prev.filter((line) => line.lineId !== lineId));
   };
 
-  // Order total
   const total = useMemo(() => {
     return order.reduce((sum, li) => {
       const addonsTotal = (li.addons || []).reduce(
@@ -178,13 +164,12 @@ export default function Pos() {
     }, 0);
   }, [order]);
 
-  // Go to checkout with preserved data
   const goToCheckout = () => {
     const itemsPayload = order.map((li) => ({
       menuItem: li.menuItemId,
       quantity: li.quantity,
       addons: (li.addons || []).map((a) => a._id),
-      size: li.size, // <-- include for drinks
+      size: li.size,
     }));
     const state = { order, itemsPayload, total };
     localStorage.setItem("posOrder", JSON.stringify(state));

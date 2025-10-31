@@ -123,9 +123,6 @@ export default function Admin() {
     }
   };
 
-  // When clicking the action button:
-  // - if next state is "disabled" => show confirmation modal
-  // - if enabling => toggle immediately
   const handleToggleClick = (u) => {
     const next =
       u.status === "active" || u.status === true ? "disabled" : "active";

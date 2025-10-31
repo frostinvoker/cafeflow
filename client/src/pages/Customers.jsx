@@ -40,7 +40,6 @@ export default function Customers() {
     return () => abort.abort();
   }, []);
 
-  // Add customer modal
   const openAddCustomer = () => {
     setForm({ name: "", email: "" });
     setShowAddCustomer(true);
@@ -295,7 +294,7 @@ export default function Customers() {
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
+      {/* Confirm Delete Modal */}
       {showDelete && (
         <div
           className="modal-overlay"

@@ -66,20 +66,12 @@ CheckoutSchema.pre('validate', function (next) {
   for (const it of this.items || []) {
     const base = Number(it.price) || 0;
     const addons = (it.addons || []).reduce((s, a) => s + (Number(a.price) || 0), 0);
-    const lineDisc = Number(it.lineDiscount) || 0;
+    const lineDisc = Math.max(0, Number(it.lineDiscount) || 0);
     const qty = Math.max(1, Number(it.quantity) || 1);
-    it.subtotal = Math.max(0, (base + addons - lineDisc)) * qty;
+    it.subtotal = Math.max(0, base + addons - lineDisc) * qty;
   }
   this.subtotal = (this.items || []).reduce((s, it) => s + (Number(it.subtotal) || 0), 0);
-  if (Array.isArray(this.items)) {
-    this.items.forEach((it) => {
-      const base = Number(it.price) || 0;
-      const addonsTotal = (it.addons || []).reduce((s, a) => s + (Number(a.price) || 0), 0);
-      const qty = Number(it.quantity) || 0;
-      it.subtotal = (base + addonsTotal) * qty;
-    });
-  }
-  this.total = (this.items || []).reduce((sum, it) => sum + (Number(it.subtotal) || 0), 0);
+  this.total = this.subtotal;
   next();
 });
 

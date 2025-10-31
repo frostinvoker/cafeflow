@@ -1,4 +1,3 @@
-// Routes for AddOn CRUD
 import { Router } from 'express';
 import {
   listAddOns,

@@ -8,6 +8,7 @@ import Inventory from "./pages/Inventory";
 import Menu from "./pages/Menu";
 import Pos from "./pages/Pos";
 import Admin from "./pages/Admin";
+import Analytics from "./pages/Analytics";
 import Checkout from "./components/pos/Checkout";
 import Receipt from "./components/pos/Receipt";
 
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="pos/checkout/receipt" element={<Receipt />} />
         <Route path="/pos/checkout/receipt/:checkoutId" element={<Receipt />} />
         <Route path="customers" element={<Customers />} />
+        <Route path="analytics" element={<Analytics />} />
         <Route path="inventory" element={<Inventory />} />
         <Route path="menu" element={<Menu />} />
         <Route path="admin" element={<Admin />} />

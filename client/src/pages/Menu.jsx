@@ -13,10 +13,12 @@ export default function Menu() {
   const [form, setForm] = useState({
     name: "",
     category: "",
-    price: "",       
-    size12: "",         
-    size16: "",         
+    price: "",
+    size12: "",
+    size16: "",
   });
+  const [formRecipe, setFormRecipe] = useState([]);
+  const [editRecipe, setEditRecipe] = useState([]);
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState({
     _id: "",
@@ -64,7 +66,38 @@ export default function Menu() {
   const [showDeleteAddOn, setShowDeleteAddOn] = useState(false);
   const [deleteAddOnTarget, setDeleteAddOnTarget] = useState(null);
   const categoryOptions = useMemo(() => ["Drinks", "Snacks", "Meals"], []);
-  
+  function getRow(list, id) {
+    return (
+      list.find((r) => String(r.ingredient) === String(id)) || {
+        ingredient: id,
+        qtyPerUnit: 0,
+        perSize: {},
+      }
+    );
+  }
+  function buildRecipePayload(selectedIds, recipeState, isDrink) {
+    const allow = new Set((selectedIds || []).map(String));
+    return (recipeState || [])
+      .filter((r) => allow.has(String(r.ingredient)))
+      .map((r) => {
+        const base = { ingredient: r.ingredient };
+
+
+        if (!isDrink) {
+          const q = parseFloat(r.qtyPerUnit);
+          base.qtyPerUnit = Number.isFinite(q) && q >= 0 ? q : 0;
+        } else {
+          const oz12 = Number(r.perSize?.oz12);
+          const oz16 = Number(r.perSize?.oz16);
+          const perSize = {
+            ...(Number.isFinite(oz12) && oz12 >= 0 ? { oz12 } : {}),
+            ...(Number.isFinite(oz16) && oz16 >= 0 ? { oz16 } : {}),
+          };
+          if (Object.keys(perSize).length) base.perSize = perSize;
+        }
+        return base;
+      });
+  }
 
   const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
   const formatPHP = (n) =>
@@ -109,24 +142,25 @@ export default function Menu() {
     };
   }, []);
 
-    // clear the opposite fields when ADD form category changes
+
   useEffect(() => {
     const isDrink = (form.category || "").toLowerCase() === "drinks";
-    setForm(f => isDrink
-      ? { ...f, price: "" }                  // drinks: no single price
-      : { ...f, size12: "", size16: "" }     // non-drinks: no size prices
+    setForm(
+      (f) =>
+        isDrink
+          ? { ...f, price: "" } 
+          : { ...f, size12: "", size16: "" }
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [form.category]);
 
-  // clear the opposite fields when EDIT form category changes
+
   useEffect(() => {
     const isDrink = (editForm.category || "").toLowerCase() === "drinks";
-    setEditForm(f => isDrink
-      ? { ...f, price: "" }
-      : { ...f, size12: "", size16: "" }
+    setEditForm((f) =>
+      isDrink ? { ...f, price: "" } : { ...f, size12: "", size16: "" }
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [editForm.category]);
 
   useEffect(() => {
@@ -137,7 +171,7 @@ export default function Menu() {
       showIngredientPicker ||
       showIngredientPickerEdit;
     if (!needInventory) return;
-    if (inventory.length) return; // already loaded
+    if (inventory.length) return; 
 
     (async () => {
       try {
@@ -182,12 +216,28 @@ export default function Menu() {
     };
   }, [activeTab, addonsLoaded]);
   const openIngredientPicker = () => {
-    setTempSelectedIngredientIds(selectedIngredientIds); // start from current
+    setTempSelectedIngredientIds(selectedIngredientIds); 
     setShowIngredientPicker(true);
   };
   const closeIngredientPicker = () => setShowIngredientPicker(false);
   const confirmIngredientPicker = () => {
     setSelectedIngredientIds(tempSelectedIngredientIds);
+    setFormRecipe((prev) => {
+      const setIds = new Set(tempSelectedIngredientIds.map(String));
+      // keep only still-selected
+      const kept = prev.filter((r) => setIds.has(String(r.ingredient)));
+      // add defaults for new ones
+      const existing = new Set(kept.map((r) => String(r.ingredient)));
+      const isDrink = (form.category || "").toLowerCase() === "drinks";
+      const added = tempSelectedIngredientIds
+        .filter((id) => !existing.has(String(id)))
+        .map((id) =>
+          isDrink
+            ? { ingredient: id, perSize: {} }
+            : { ingredient: id, qtyPerUnit: 0 }
+        );
+      return [...kept, ...added];
+    });
     setShowIngredientPicker(false);
   };
   const openIngredientPickerEdit = () => {
@@ -197,11 +247,26 @@ export default function Menu() {
   const closeIngredientPickerEdit = () => setShowIngredientPickerEdit(false);
   const confirmIngredientPickerEdit = () => {
     setEditSelectedIngredientIds(tempEditSelectedIngredientIds);
+    setEditRecipe((prev) => {
+      const setIds = new Set(tempEditSelectedIngredientIds.map(String));
+      const kept = prev.filter((r) => setIds.has(String(r.ingredient)));
+      const existing = new Set(kept.map((r) => String(r.ingredient)));
+      const isDrink = (editForm.category || "").toLowerCase() === "drinks";
+      const added = tempEditSelectedIngredientIds
+        .filter((id) => !existing.has(String(id)))
+        .map((id) =>
+          isDrink
+            ? { ingredient: id, perSize: {} }
+            : { ingredient: id, qtyPerUnit: 0 }
+        );
+      return [...kept, ...added];
+    });
     setShowIngredientPickerEdit(false);
   };
   // Handlers
   const openAddMenu = () => {
     setForm({ name: "", category: "", price: "", size12: "", size16: "" });
+    setFormRecipe([]);
     setShowAddMenu(true);
   };
 
@@ -248,6 +313,7 @@ export default function Menu() {
         name: form.name.trim(),
         category: form.category,
         ingredients: selectedIngredientIds,
+        recipe: buildRecipePayload(selectedIngredientIds, formRecipe, isDrink),
         ...(isDrink
           ? {
               sizePrices: {
@@ -287,12 +353,33 @@ export default function Menu() {
       _id: item._id,
       name: item.name,
       category: item.category,
-      price: String(item.price ?? ""), // non-Drinks
+      price: String(item.price ?? ""), 
       size12: isDrink ? String(item.sizePrices?.oz12 ?? "") : "",
       size16: isDrink ? String(item.sizePrices?.oz16 ?? "") : "",
       available: !!item.available,
     });
     setEditSelectedIngredientIds(item.ingredients || []);
+    setEditRecipe(
+      Array.isArray(item.recipe) && item.recipe.length
+        ? item.recipe.map((r) => ({
+            ingredient: r.ingredient,
+            qtyPerUnit: Number(r.qtyPerUnit ?? 0),
+            perSize: r.perSize
+              ? {
+                  ...(Number.isFinite(Number(r.perSize.oz12))
+                    ? { oz12: Number(r.perSize.oz12) }
+                    : {}),
+                  ...(Number.isFinite(Number(r.perSize.oz16))
+                    ? { oz16: Number(r.perSize.oz16) }
+                    : {}),
+                }
+              : undefined,
+          }))
+        : (item.ingredients || []).map((id) => ({
+            ingredient: id,
+            qtyPerUnit: 0,
+          }))
+    );
     setShowEdit(true);
   };
 
@@ -314,14 +401,17 @@ export default function Menu() {
         category: editForm.category,
         available: !!editForm.available,
         ingredients: editSelectedIngredientIds,
+        recipe: buildRecipePayload(
+          editSelectedIngredientIds,
+          editRecipe,
+          isDrink
+        ),
         ...(isDrink
           ? {
-              // ensure numbers
               sizePrices: {
                 oz12: Number(editForm.size12),
                 oz16: Number(editForm.size16),
               },
-              // ensure we do NOT send price for drinks (so schema stays clean)
             }
           : {
               price: Number(editForm.price) || 0,
@@ -345,7 +435,6 @@ export default function Menu() {
       setError(err.message || "Failed to update item");
     }
   };
-
 
   const openDeleteConfirm = (item) => {
     setDeleteTarget(item);
@@ -493,6 +582,7 @@ export default function Menu() {
       ? items
       : items.filter((it) => it.category === activeTab);
 
+  // RENDERS WHOLE MENU TABLE
   const renderMenuTable = (rows) => (
     <table className="menu" cellSpacing={0} cellPadding={0}>
       <thead>
@@ -510,19 +600,23 @@ export default function Menu() {
             <td>{it.name}</td>
             <td>{cap(it.category)}</td>
             <td>
-              {((it.category || "").toLowerCase() === "drinks")
-                ? `${formatPHP(Number(it.sizePrices?.oz12 ?? 0))} / ${formatPHP(Number(it.sizePrices?.oz16 ?? 0))}`
+              {(it.category || "").toLowerCase() === "drinks"
+                ? `${formatPHP(Number(it.sizePrices?.oz12 ?? 0))} / ${formatPHP(
+                    Number(it.sizePrices?.oz16 ?? 0)
+                  )}`
                 : formatPHP(Number(it.price) || 0)}
             </td>
             <td
               className={`availability ${
-                (it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true)))
+                it.effectiveAvailable ??
+                ((it.available ?? true) && (it.availableComputed ?? true))
                   ? "available"
                   : "unavailable"
               }`}
             >
               <span className="badge">
-                {(it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true)))
+                {it.effectiveAvailable ??
+                ((it.available ?? true) && (it.availableComputed ?? true))
                   ? "Available"
                   : "Not Available"}
               </span>
@@ -547,7 +641,7 @@ export default function Menu() {
       </tbody>
     </table>
   );
-
+  // RENDERS THE ADDONS TABLE
   const renderAddOnTable = (rows) => (
     <table className="menu" cellSpacing={0} cellPadding={0}>
       <thead>
@@ -636,7 +730,7 @@ export default function Menu() {
         )}
       </div>
 
-      {/* MODALS */}
+      {/* Add Menu Item Modal */}
       {showAddMenu && (
         <div
           className="modal-overlay"
@@ -710,17 +804,109 @@ export default function Menu() {
                 >
                   Select ingredients
                 </button>
-                <div className="ingredient-summary">
-                  {selectedIngredientIds.length === 0 ? (
-                    <em>No ingredients selected</em>
-                  ) : (
-                    inventory
-                      .filter((i) => selectedIngredientIds.includes(i._id))
-                      .map((i) => i.name)
-                      .join(", ")
-                  )}
-                </div>
               </div>
+              {/* Select Recipe & Ingredients Qty*/}
+              {selectedIngredientIds.length > 0 && (
+                <div className="recipe-editor">
+                  <h4>Stock used per item</h4>
+                  <div className="recipe-grid">
+                    {selectedIngredientIds.map((id) => {
+                      const inv = inventory.find((i) => i._id === id);
+                      const row = getRow(formRecipe, id);
+                      const isDrink =
+                        (form.category || "").toLowerCase() === "drinks";
+                      return (
+                        <div key={String(id)} className="recipe-row">
+                          <div className="recipe-name">
+                            {inv?.name || String(id)}{" "}
+                            {inv?.unit ? <small>({inv.unit})</small> : null}
+                          </div>
+
+                          {!isDrink && (
+                            <label>
+                              Qty / {inv?.unit ?? "unit"}
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min="0"
+                                value={row.qtyPerUnit ?? ""}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  setFormRecipe((prev) =>
+                                    prev.map((r) =>
+                                      String(r.ingredient) === String(id)
+                                        ? { ...r, qtyPerUnit: v }
+                                        : r
+                                    )
+                                  );
+                                }}
+                              />
+                            </label>
+                          )}
+
+                          {isDrink && (
+                            <>
+                              <label>
+                                Qty for 12oz
+                                <input
+                                  type="number"
+                                  min="0"
+                                  inputMode="decimal"
+                                  step="0.01"
+                                  value={row.perSize?.oz12 ?? ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setFormRecipe((prev) =>
+                                      prev.map((r) =>
+                                        String(r.ingredient) === String(id)
+                                          ? {
+                                              ...r,
+                                              perSize: {
+                                                ...(r.perSize || {}),
+                                                oz12: v,
+                                              },
+                                            }
+                                          : r
+                                      )
+                                    );
+                                  }}
+                                />
+                              </label>
+                              <label>
+                                Qty for 16oz
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  min="0"
+                                  step="0.01"
+                                  value={row.perSize?.oz16 ?? ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setFormRecipe((prev) =>
+                                      prev.map((r) =>
+                                        String(r.ingredient) === String(id)
+                                          ? {
+                                              ...r,
+                                              perSize: {
+                                                ...(r.perSize || {}),
+                                                oz16: v,
+                                              },
+                                            }
+                                          : r
+                                      )
+                                    );
+                                  }}
+                                />
+                              </label>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="modal-actions">
                 <button
                   type="submit"
@@ -741,7 +927,7 @@ export default function Menu() {
           </div>
         </div>
       )}
-
+      {/* Edit Menu Item Modal */}
       {showEdit && (
         <div
           className="modal-overlay"
@@ -765,9 +951,13 @@ export default function Menu() {
                 onChange={handleEditChange}
                 required
               >
-                <option value="" disabled>Select Category</option>
+                <option value="" disabled>
+                  Select Category
+                </option>
                 {categoryOptions.map((u) => (
-                  <option key={u} value={u}>{u}</option>
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
                 ))}
               </select>
 
@@ -823,17 +1013,109 @@ export default function Menu() {
                 >
                   Select ingredients
                 </button>
-                <div className="ingredient-summary">
-                  {editSelectedIngredientIds.length === 0 ? (
-                    <em>No ingredients selected</em>
-                  ) : (
-                    inventory
-                      .filter((i) => editSelectedIngredientIds.includes(i._id))
-                      .map((i) => i.name)
-                      .join(", ")
-                  )}
-                </div>
               </div>
+              {/* Recipe Editor */}
+              {editSelectedIngredientIds.length > 0 && (
+                <div className="recipe-editor">
+                  <h4>Stock used per item</h4>
+                  <div className="recipe-grid">
+                    {editSelectedIngredientIds.map((id) => {
+                      const inv = inventory.find((i) => i._id === id);
+                      const row = getRow(editRecipe, id);
+                      const isDrink =
+                        (editForm.category || "").toLowerCase() === "drinks";
+                      return (
+                        <div key={String(id)} className="recipe-row">
+                          <div className="recipe-name">
+                            {inv?.name || String(id)}{" "}
+                            {inv?.unit ? <small>({inv.unit})</small> : null}
+                          </div>
+
+                          {!isDrink && (
+                            <label>
+                              Qty / {inv?.unit ?? "unit"}
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="0.01"
+                                value={row.qtyPerUnit ?? ""}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  setEditRecipe((prev) =>
+                                    prev.map((r) =>
+                                      String(r.ingredient) === String(id)
+                                        ? { ...r, qtyPerUnit: v }
+                                        : r
+                                    )
+                                  );
+                                }}
+                              />
+                            </label>
+                          )}
+
+                          {isDrink && (
+                            <>
+                              <label>
+                                Qty for 12oz
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  min="0"
+                                  step="0.01"
+                                  value={row.perSize?.oz12 ?? ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setEditRecipe((prev) =>
+                                      prev.map((r) =>
+                                        String(r.ingredient) === String(id)
+                                          ? {
+                                              ...r,
+                                              perSize: {
+                                                ...(r.perSize || {}),
+                                                oz12: v,
+                                              },
+                                            }
+                                          : r
+                                      )
+                                    );
+                                  }}
+                                />
+                              </label>
+                              <label>
+                                Qty for 16oz
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  min="0"
+                                  step="0.01"
+                                  value={row.perSize?.oz16 ?? ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setEditRecipe((prev) =>
+                                      prev.map((r) =>
+                                        String(r.ingredient) === String(id)
+                                          ? {
+                                              ...r,
+                                              perSize: {
+                                                ...(r.perSize || {}),
+                                                oz16: v,
+                                              },
+                                            }
+                                          : r
+                                      )
+                                    );
+                                  }}
+                                />
+                              </label>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="modal-actions">
                 <button type="submit" className="primary">
                   Save Changes
@@ -850,7 +1132,7 @@ export default function Menu() {
           </div>
         </div>
       )}
-
+      {/* Confirm Delete Addon */}
       {showDelete && (
         <div
           className="modal-overlay"
@@ -876,7 +1158,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* FOR ADDON*/}
+      {/* Create Addon Modal*/}
       {showAddOn && (
         <div
           className="modal-overlay"
@@ -944,6 +1226,7 @@ export default function Menu() {
           </div>
         </div>
       )}
+      {/* Edit Addon Modal*/}
       {showEditAddOn && (
         <div
           className="modal-overlay"
@@ -1011,6 +1294,7 @@ export default function Menu() {
           </div>
         </div>
       )}
+      {/* Confirm Delete Addon */}
       {showDeleteAddOn && (
         <div
           className="modal-overlay"
@@ -1035,6 +1319,7 @@ export default function Menu() {
           </div>
         </div>
       )}
+      {/* Select Ingredients Modal */}
       {showIngredientPicker && (
         <div
           className="modal-overlay"
@@ -1085,7 +1370,7 @@ export default function Menu() {
           </div>
         </div>
       )}
-
+      {/* Select Ingredients Modal */}
       {showIngredientPickerEdit && (
         <div
           className="modal-overlay"

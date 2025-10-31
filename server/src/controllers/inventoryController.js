@@ -67,7 +67,7 @@ export async function listLowStockInventory(req, res) {
         $addFields: {
           effectiveThreshold: {
             $cond: [
-              { $gt: ['$lowStockThreshold', 0] }, // per-item override
+              { $gt: ['$lowStockThreshold', 0] },
               '$lowStockThreshold',
               defaultT
             ]

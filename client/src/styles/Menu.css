@@ -1,22 +1,22 @@
-.menu-category{
+.menu-category {
   margin-top: 1em;
   display: inline-flex;
   gap: 0.5em;
 }
-.menu-category .category-button{
+.menu-category .category-button {
   padding: 0.3em 1.5em;
-  border: 0.5px solid #E2E8F0;
+  border: 0.5px solid #e2e8f0;
   background: white;
   border-radius: 10px;
   color: black;
   cursor: pointer;
 }
-.menu-category .active{
-  background: #2563EB;
+.menu-category .active {
+  background: #2563eb;
   color: white;
   border: none;
 }
-.add-customer{
+.add-customer {
   min-width: 5ch;
   max-width: 20ch;
   padding: 0.7em;
@@ -29,109 +29,109 @@
   border-radius: 15px;
 }
 .table-scroll {
-    max-height: auto;
-    overflow-y: auto;
-    overflow-x: hidden;
+  max-height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
-.menu{
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    margin-top: 1em;
-    max-height: 30ch;
+.menu {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 1em;
+  max-height: 30ch;
 }
-.table-header{
-    background-color: #F1F5F9;
+.table-header {
+  background-color: #f1f5f9;
 }
-.table-header th{
-    color: #47556E;
-    z-index: 1;
-    position: sticky;
-    text-align: left;
-    font-weight: 600;
-    padding: 0.7em 1em;
-    top: 0;
+.table-header th {
+  color: #47556e;
+  z-index: 1;
+  position: sticky;
+  text-align: left;
+  font-weight: 600;
+  padding: 0.7em 1em;
+  top: 0;
 }
-.table-header th:nth-child(4), th:nth-child(5){
-    text-align: center;
+.table-header th:nth-child(4),
+th:nth-child(5) {
+  text-align: center;
 }
-.menu tbody tr:nth-child(odd){
-    background: white;
+.menu tbody tr:nth-child(odd) {
+  background: white;
 }
-.menu tbody tr:nth-child(even){
-    background: #F2F6F8;
+.menu tbody tr:nth-child(even) {
+  background: #f2f6f8;
 }
-.menu .table-body td{
-    text-align: left;
-    font-weight: 500;
-    padding: 0.7em 1em;
+.menu .table-body td {
+  text-align: left;
+  font-weight: 500;
+  padding: 0.7em 1em;
 }
-.table-body td.availability.available{ 
-    color: #155724; 
+.table-body td.availability.available {
+  color: #155724;
 }
-td.availability.unavailable { 
-    color: #BC9498; 
+td.availability.unavailable {
+  color: #bc9498;
 }
 td.availability .badge {
-    text-align: center;
-    width: 100%;
-    display: inline-block;
-    padding: .2rem .5rem;
-    border-radius: 50px;
-    font-weight: 600;
-    background: #D4EDDA;
+  text-align: center;
+  width: 100%;
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  background: #d4edda;
 }
 td.availability.unavailable .badge {
-  background: #F7E7E8;
+  background: #f7e7e8;
 }
-.table-body .table-buttons{
-    display: flex;
-    flex-direction: row;
-    gap: 1em;
+.table-body .table-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
 }
 
-.table-body .buttons button{
-    border: none;
-    font-family: Poppins, sans-serif;
-    border-radius: 5px;
-    padding: 0.3em 1em;
-    cursor: pointer;
+.table-body .buttons button {
+  border: none;
+  font-family: Poppins, sans-serif;
+  border-radius: 5px;
+  padding: 0.3em 1em;
+  cursor: pointer;
 }
-.default-container .header-buttons{
-    display: flex;
-    flex-direction: row;
-    margin-top: 1em;
+.default-container .header-buttons {
+  display: flex;
+  flex-direction: row;
+  margin-top: 1em;
 }
-.default-container .header-buttons button{
-    border: none;
-    padding: 0.7em;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: Poppins, sans-serif;
+.default-container .header-buttons button {
+  border: none;
+  padding: 0.7em;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: Poppins, sans-serif;
 }
-.default-container .header-buttons button:last-child{
+.default-container .header-buttons button:last-child {
   margin-left: auto;
 }
-.table-body .buttons .edit{
-    background-color: #4CAF50;
+.table-body .buttons .edit {
+  background-color: #4caf50;
 }
 
-.table-body .buttons .remove{
-    background-color: #F87171;
+.table-body .buttons .remove {
+  background-color: #f87171;
 }
 
-
-.modal-overlay{
+.modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
-.addMenuItem-modal{
+.addMenuItem-modal {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -139,16 +139,17 @@ td.availability.unavailable .badge {
   background: #ffffff;
   border-radius: 12px;
   padding: 2em 2em;
-  box-shadow: 0 4px 25px 2px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 25px 2px rgba(0, 0, 0, 0.25);
 }
 
-.addMenuItem-modal form{
+.addMenuItem-modal form {
   width: 100%;
   display: grid;
   gap: 1em;
 }
 
-.addMenuItem-modal input, .addMenuItem-modal select{
+.addMenuItem-modal input,
+.addMenuItem-modal select {
   width: 100%;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -157,29 +158,29 @@ td.availability.unavailable .badge {
   color: black;
 }
 
-.addMenuItem-modal select{
+.addMenuItem-modal select {
   background-color: transparent;
 }
 
-.modal-actions{
+.modal-actions {
   margin-top: 0.5rem;
   display: flex;
   justify-content: center;
   gap: 2em;
 }
 
-.modal-actions .primary{
+.modal-actions .primary {
   color: #fff;
   border: none;
   border-radius: 10px;
   padding: 0.5rem 0.9rem;
   cursor: pointer;
 }
-.checkbox-availability{
-    display: flex;
-    align-items: left;
+.checkbox-availability {
+  display: flex;
+  align-items: left;
 }
-.modal-actions .secondary{
+.modal-actions .secondary {
   background: transparent;
   color: #111827;
   border: 1px solid #e5e7eb;
@@ -189,7 +190,7 @@ td.availability.unavailable .badge {
 }
 
 .modal-actions .remove {
-  background: #F87171;
+  background: #f87171;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -197,44 +198,79 @@ td.availability.unavailable .badge {
   cursor: pointer;
 }
 
-.modal .modal-item-form, .modal .modal-addon-form{
+.modal .modal-item-form,
+.modal .modal-addon-form {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: left;
 }
-.size-selector{
+.size-selector {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1em;
 }
-.ingredients-list{
+.ingredients-list {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-
 }
-.ingredients-list .ingredient-check{
-  display:grid;
+.ingredients-list .ingredient-check {
+  display: grid;
   grid-template-columns: 1.1rem 1fr;
-  align-items:start;
-  column-gap:.5rem;
+  align-items: start;
+  column-gap: 0.5rem;
 }
 
-.ingredient-summary-row .select-ingredients{
+.ingredient-summary-row .select-ingredients {
   border: none;
   border-radius: 10px;
   padding: 0.5em 1em;
   margin-bottom: 1em;
 }
- .modal-item-form .ingredient-summary-row .select-ingredients{
+.modal-item-form .ingredient-summary-row .select-ingredients {
   border: none;
   border-radius: 10px;
   padding: 0.5em 1em;
- }
+}
 
- .selected-customer-line small { color: #6b7280; }
-.muted { color: #9ca3af; }
+.selected-customer-line small {
+  color: #6b7280;
+}
+.muted {
+  color: #9ca3af;
+}
+
+.recipe-editor h4 {
+  margin: 0 0 8px;
+}
+.recipe-grid {
+  display: grid;
+  gap: 0.5em;
+}
+.recipe-row {
+  display: flex;
+  gap: 0.5em;
+  align-items: end;
+}
+.recipe-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.recipe-row label:nth-child(2){
+  margin-left: auto;
+}
+.recipe-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.7rem;
+}
+.recipe-row input {
+  max-width: 15ch;
+  padding: 0.4em;
+}
+

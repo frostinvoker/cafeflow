@@ -1,0 +1,651 @@
+.analytics-container { 
+  max-width: 100%;
+  padding: 1.5rem;
+}
+
+.analytics-container h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.analytics-container p { 
+  margin-bottom: 0.75rem; 
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Main layout structure */
+.analytics-grid { 
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  height: 90vh;
+  max-width: 100%;
+}
+
+.sales-overview-section {
+  min-height: 280px;
+}
+
+.bestsellers-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* Interactive Graph */
+.graph-container {
+  position: relative;
+  min-height: 320px;
+  padding: 0;            /* Chart.js draws its own axes */
+}
+
+
+.sales-graph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #f8f9fa;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.data-point {
+  fill: #006599;
+  transition: transform 0.14s ease, fill 0.14s ease;
+  cursor: pointer;
+  transform-origin: center;
+}
+
+.data-point-hover {
+  cursor: pointer;
+}
+
+.data-point-group:hover .data-point {
+  fill: #0077b3;
+  transform: scale(1.2);
+}
+
+/* Make tooltip more visible */
+.sales-tooltip {
+  background: rgba(0, 0, 0, 0.85);
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.sales-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  white-space: nowrap;
+}
+
+.sales-tooltip.visible {
+  opacity: 1;
+}
+
+.sales-tooltip strong {
+  color: #58a6d8;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.card { 
+  background: #fff; 
+  border: 1px solid #e6e6e6; 
+  padding: 1.25rem; 
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.card-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+/* Sales Overview Section */
+.sales-overview {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Period selector styles */
+.period-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.sales-graph .grid-line,
+.sales-graph .sales-line,
+.sales-graph .data-point {
+  vector-effect: non-scaling-stroke;
+}
+/* Best Sellers Section */
+.bestsellers-section {
+  flex: 1;
+}
+
+.sales-line {
+  fill: none;
+  stroke: #006599;
+  stroke-width: 1.5;
+}
+.grid-line {
+  stroke: #e0e0e0;
+  stroke-width: 1;
+}
+.data-point {
+  fill: #006599;
+  transition: all 0.2s ease;
+}
+
+.data-point-group {
+  cursor: pointer;
+}
+
+.data-point-group:hover .data-point {
+  fill: #0077b3;
+  stroke: white;
+  stroke-width: 1;
+}
+
+.sales-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  white-space: nowrap;
+}
+
+.sales-tooltip.visible {
+  opacity: 1;
+}
+
+.sales-tooltip strong {
+  color: #58a6d8;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.x-axis-dates {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px; /* space for labels */
+  height: 22px;
+  pointer-events: none; /* let pointer events go to svg */
+}
+
+.date-label {
+  position: absolute;
+  top: 0;
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+.y-axis-values {
+  position: absolute;
+  left: 0;
+  top: 0.75rem;
+  height: calc(100% - 35px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #666;
+  padding-right: 0.5rem;
+}
+
+
+/* Best Sellers styles */
+.bestsellers-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(30ch, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.bestsellers-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.bestsellers-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.bestsellers-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.bestsellers-container::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.category-section {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 1rem;
+  flex: none;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+.category-title {
+  color: #006599;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid #006599;
+}
+
+.category-chart {
+  position: relative;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.chart-area {
+  position: relative;
+  height: 150px;
+  padding: 12px 8px 20px;
+  margin-bottom: 20px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.bar-container {
+  position: absolute;
+  bottom: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.bar-container:hover {
+  transform: translateY(-2px);
+}
+
+.bar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: #006599;
+  border-radius: 4px 4px 0 0;
+  transition: all 0.3s ease;
+}
+
+.bar:hover {
+  background: #0077b3;
+}
+
+.bar-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.9);
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.bar-tooltip strong {
+  color: #58a6d8;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.bar:hover .bar-tooltip {
+  opacity: 1;
+}
+
+.bar-quantity {
+  position: absolute;
+  top: -20px;
+  width: 100%;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #006599;
+}
+
+.bar-name {
+  position: absolute;
+  bottom: -25px;
+  width: 100%;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 2px;
+}
+
+@media (min-width: 1024px) {
+  .analytics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-container {
+    padding: 0.75rem;
+  }
+
+  .analytics-grid {
+    gap: 0.75rem;
+  }
+
+  .card {
+    padding: 0.75rem;
+  }
+
+  .graph-container {
+    padding: 0.5rem 0 0.5rem 2rem;
+    height: 200px;
+  }
+
+  .sales-graph {
+    height: 140px;
+  }
+
+  .chart-area {
+    height: 160px;
+    padding: 10px 8px 20px;
+    margin-bottom: 25px;
+  }
+
+  .bar-name {
+    font-size: 0.7rem;
+    transform: rotate(-30deg);
+    transform-origin: top left;
+    width: 70px;
+  }
+
+  .category-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .bar-quantity {
+    font-size: 0.7rem;
+    top: -16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-container h2 {
+    font-size: 1.25rem;
+  }
+
+  .card h3 {
+    font-size: 1rem;
+  }
+
+  .chart-area {
+    height: 140px;
+    padding: 8px 6px 20px;
+  }
+
+  .bar-tooltip {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
+
+  .period-select {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .analytics-grid {
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .category-section {
+    padding: 0.5rem 0;
+  }
+
+  .chart-area {
+    height: 200px;
+    padding: 15px;
+    margin-bottom: 60px;
+  }
+
+  .bar-name {
+    font-size: 0.75rem;
+    transform: rotate(-45deg);
+    transform-origin: top left;
+    width: 100px;
+    bottom: -50px;
+    left: 10px;
+  }
+
+  .bar-quantity {
+    font-size: 0.75rem;
+  }
+
+  .bar-tooltip {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+
+  .category-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Additional responsive tweaks for very small screens */
+@media (max-width: 480px) {
+  .chart-area {
+    height: 180px;
+    padding: 10px;
+    margin-bottom: 70px;
+  }
+
+  .bar-name {
+    font-size: 0.7rem;
+    width: 80px;
+    bottom: -60px;
+  }
+
+  .category-section {
+    margin-bottom: 1rem;
+  }
+
+  .bar-tooltip {
+    font-size: 0.75rem;
+    padding: 6px;
+  }
+}
+
+.empty {
+  padding: 2rem;
+  color: #666;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .analytics-container {
+    padding: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .graph-container {
+    padding: 0.5rem 0 0.5rem 2.5rem;
+    height: 180px;
+  }
+
+  .sales-graph {
+    height: calc(100% - 30px);
+    padding: 0.5rem;
+  }
+
+  .data-point {
+    r: 3;
+  }
+
+  .data-point-group:hover .data-point {
+    r: 5;
+  }
+
+  .sales-tooltip {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .y-axis-values {
+    font-size: 0.75rem;
+    padding-right: 0.25rem;
+  }
+
+  .x-axis-dates {
+    margin-top: 0.25rem;
+    height: 18px;
+  }
+
+  .date-label {
+    font-size: 0.75rem;
+  }
+
+  .category-section {
+    padding: 0.75rem;
+  }
+
+  .bestsellers-container {
+    padding: 0.25rem;
+    gap: 1rem;
+  }
+
+  .chart-area {
+    height: 140px;
+    margin-bottom: 35px;
+  }
+
+  .bar-name {
+    font-size: 0.7rem;
+    transform: rotate(-30deg);
+    transform-origin: top left;
+    bottom: -30px;
+  }
+
+  .bar-tooltip {
+    display: none;
+  }
+}
+
+.bar {
+  position: absolute;
+  bottom: 0;
+  background: #006599;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+.bar:hover {
+  background: #0077b3;
+}
+
+.item-label {
+  font-size: 0.85em;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+@media (max-width: 900px) {
+  .analytics-grid { 
+    gap: 1rem;
+  }
+
+  .bestsellers-container {
+    gap: 1rem;
+  }
+
+  .category-section {
+    flex: 0 0 280px;
+  }
+}
+
+@media (max-width: 600px) {
+  .analytics-grid {
+    gap: 0.75rem;
+  }
+
+  .bestsellers-container {
+    gap: 0.75rem;
+  }
+
+  .category-section {
+    flex: 0 0 260px;
+  }
+}

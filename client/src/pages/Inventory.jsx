@@ -199,12 +199,13 @@ export default function Inventory() {
           + Add New Item
         </button>
       </div>
-
+            {/*Inventory Items*/}
       {loading ? (
         <div style={{ padding: "1rem" }}>Loading inventory...</div>
       ) : error ? (
         <div style={{ padding: "1rem", color: "#b91c1c" }}>{error}</div>
       ) : (
+        
         <div className="inventory-list">
           {items.map((it) => (
             <div key={it._id} className="item">
@@ -237,7 +238,7 @@ export default function Inventory() {
           )}
         </div>
       )}
-
+      {/* Add new Item */}
       {showModal && (
         <div
           className="modal-overlay"
@@ -259,8 +260,6 @@ export default function Inventory() {
               <input
                 name="quantity"
                 type="number"
-                min="0"
-                step="1"
                 value={form.quantity}
                 onChange={handleChange}
                 required
@@ -315,7 +314,7 @@ export default function Inventory() {
           </div>
         </div>
       )}
-
+      {/* Edit Inventory Modal */}
       {showEdit && (
         <div
           className="modal-overlay"
@@ -326,23 +325,26 @@ export default function Inventory() {
           <div className="modal">
             <h2>Edit Item</h2>
             <form onSubmit={handleUpdate}>
-              <input
-                name="name"
-                value={editForm.name}
-                onChange={handleEditChange}
-                required
-                placeholder="Item Name"
-              />
+              <label>Item Name
+                <input
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditChange}
+                  required
+                  placeholder="Item Name"
+                />
+              </label>
+              <label>Quantity
               <input
                 name="quantity"
                 type="number"
-                min="0"
-                step="1"
                 value={editForm.quantity}
                 onChange={handleEditChange}
                 required
                 placeholder="Stock Quantity"
               />
+              </label>
+              <label>Price per Unit
               <input
                 name="price"
                 type="number"
@@ -352,6 +354,8 @@ export default function Inventory() {
                 onChange={handleEditChange}
                 placeholder="Price Per Unit"
               />
+              </label>
+              <label>Unit
               <select
                 name="unit"
                 value={editForm.unit}
@@ -367,6 +371,8 @@ export default function Inventory() {
                   </option>
                 ))}
               </select>
+              </label>
+              <label>Min. Quantity for Low Supply Alert
               <input
                 name="lowStockThreshold"
                 type="number"
@@ -376,6 +382,7 @@ export default function Inventory() {
                 onChange={handleEditChange}
                 placeholder="Insert Quantity for Low Supply Alert"
               />
+              </label>
               <div className="modal-actions">
                 <button type="submit" className="primary">
                   Save Changes
@@ -389,6 +396,7 @@ export default function Inventory() {
         </div>
       )}
 
+      {/* Confirm Delete Modal */}
       {showDelete && (
         <div
           className="modal-overlay"
