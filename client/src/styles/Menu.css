@@ -36,7 +36,7 @@
 .menu {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
   margin-top: 1em;
   max-height: 30ch;
 }
@@ -52,8 +52,7 @@
   padding: 0.7em 1em;
   top: 0;
 }
-.table-header th:nth-child(4),
-th:nth-child(5) {
+.table-header th:nth-child(4), .table-header th:nth-child(5) {
   text-align: center;
 }
 .menu tbody tr:nth-child(odd) {
@@ -88,7 +87,9 @@ td.availability.unavailable .badge {
 .table-body .table-buttons {
   display: flex;
   flex-direction: row;
+  justify-content: center; 
   gap: 1em;
+  white-space: nowrap;
 }
 
 .table-body .buttons button {
@@ -205,12 +206,17 @@ td.availability.unavailable .badge {
   justify-content: center;
   align-items: center;
   text-align: left;
+  max-height: 50ch;
+  overflow-y: auto;
+}
+.modal .modal-addon-form label, .modal .modal-item-form label{
+  width: 100%;
 }
 .size-selector {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1em;
+  gap: 0.5em;
 }
 .ingredients-list {
   display: flex;
@@ -257,6 +263,7 @@ td.availability.unavailable .badge {
   align-items: end;
 }
 .recipe-name {
+  min-width: 10ch;
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -268,9 +275,5 @@ td.availability.unavailable .badge {
   flex-direction: column;
   gap: 4px;
   font-size: 0.7rem;
-}
-.recipe-row input {
-  max-width: 15ch;
-  padding: 0.4em;
 }
 

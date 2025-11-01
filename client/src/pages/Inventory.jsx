@@ -1,178 +1,35 @@
-import { useEffect, useMemo, useState } from "react";
+import { useInventory } from "../hooks/useInventory";
 import "../styles/Inventory.css";
 
 export default function Inventory() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    quantity: "",
-    price: "",
-    unit: "",
-    lowStockThreshold: "",
-  });
-
-  const [showEdit, setShowEdit] = useState(false);
-  const [editForm, setEditForm] = useState({
-    _id: "",
-    name: "",
-    quantity: "",
-    price: "",
-    unit: "pc",
-    lowStockThreshold: "",
-  });
-
-  const [showDelete, setShowDelete] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-
-  const unitOptions = useMemo(() => ["pc", "grams", "kg", "ml", "liters"], []);
-  const defaultThreshold = 3;
-
-  useEffect(() => {
-    let cancel = false;
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/inventory", {
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error("Failed to load inventory");
-        const data = await res.json();
-        if (!cancel) setItems(data);
-      } catch (err) {
-        if (!cancel) setError("Could not load inventory");
-      } finally {
-        if (!cancel) setLoading(false);
-      }
-    })();
-    return () => {
-      cancel = true;
-    };
-  }, []);
-
-  const openModal = () => {
-    setForm({ name: "", quantity: "", price: "", unit: "", lowStockThreshold: "" });
-    setShowModal(true);
-  };
-  const closeModal = () => setShowModal(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    const body = {
-      name: form.name.trim(),
-      unit: form.unit,
-      quantity: Number(form.quantity) || 0,
-    };
-    if (form.price !== "") body.price = Number(form.price) || 0;
-    if (form.lowStockThreshold !== "") body.lowStockThreshold = Math.max(0, Number(form.lowStockThreshold) || 0);
-
-    try {
-      const res = await fetch("http://localhost:5000/api/inventory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-      const created = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(created?.message || "Failed to add item");
-      setItems((list) => [created, ...list]);
-      closeModal();
-    } catch (err) {
-      setError(err.message || "Failed to add item");
-    }
-  };
-
-  const openEdit = (it) => {
-    setEditForm({
-      _id: it._id,
-      name: it.name ?? "",
-      quantity: String(it.quantity ?? ""),
-      price: it.price !== undefined && it.price !== null ? String(it.price) : "",
-      unit: it.unit ?? "pc",
-      lowStockThreshold: it.lowStockThreshold !== undefined && it.lowStockThreshold !== null ? String(it.lowStockThreshold) : "",
-    });
-    setShowEdit(true);
-  };
-  const closeEdit = () => setShowEdit(false);
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    const body = {
-      name: editForm.name.trim(),
-      unit: editForm.unit,
-      quantity: Number(editForm.quantity) || 0,
-    };
-    if (editForm.price !== "") body.price = Number(editForm.price) || 0;
-    if (editForm.lowStockThreshold !== "") body.lowStockThreshold = Math.max(0, Number(editForm.lowStockThreshold) || 0);
-
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/inventory/${editForm._id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(body),
-        }
-      );
-      const updated = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(updated?.message || "Failed to update item");
-
-      setItems((list) =>
-        list.map((x) => (x._id === updated._id ? updated : x))
-      );
-      closeEdit();
-    } catch (err) {
-      setError(err.message || "Failed to update item");
-    }
-  };
-
-  const openDeleteConfirm = (item) => {
-    setDeleteTarget(item);
-    setShowDelete(true);
-  };
-  const closeDeleteConfirm = () => setShowDelete(false);
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/inventory/${deleteTarget._id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.message || "Failed to delete item");
-      setItems((list) => list.filter((it) => it._id !== deleteTarget._id));
-      closeDeleteConfirm();
-    } catch (err) {
-      setError(err.message || "Failed to delete item");
-    }
-  };
+  const {
+    items,
+    loading,
+    error,
+    unitOptions,
+    defaultThreshold,
+    form,
+    editForm,
+    deleteTarget,
+    createOpen,
+    editOpen,
+    deleteOpen,
+    lowItems,
+    // actions
+    openCreate,
+    closeCreate,
+    onFormChange,
+    create,
+    openEdit,
+    closeEdit,
+    onEditFormChange,
+    update,
+    openDelete,
+    closeDelete,
+    confirmDelete,
+  } = useInventory();
 
   const totalItems = items.length;
-  const lowItems = items.filter((it) => {
-    const t = Number(it.lowStockThreshold) > 0 ? Number(it.lowStockThreshold) : defaultThreshold;
-    return Number(it.quantity) <= t;
-  });
   const hasLow = !loading && !error && lowItems.length > 0;
 
   return (
@@ -183,10 +40,9 @@ export default function Inventory() {
         <p>
           Low Supply:{" "}
           {lowItems
-            .map((it) => {
-              const t = Number(it.lowStockThreshold) > 0 ? Number(it.lowStockThreshold) : defaultThreshold;
-              return `${it.name} (${Number(it.quantity)} ${it.unit})`;
-            })
+            .map(
+              (it) => `${it.name} (${Number(it.quantity)} ${it.unit || "pc"})`
+            )
             .join(", ")}
         </p>
       </div>
@@ -195,17 +51,17 @@ export default function Inventory() {
         <div className="total-items">
           <p>Total items: {totalItems}</p>
         </div>
-        <button className="add-new-item" onClick={openModal}>
+        <button className="add-new-item" onClick={openCreate}>
           + Add New Item
         </button>
       </div>
-            {/*Inventory Items*/}
+
+      {/* List */}
       {loading ? (
         <div style={{ padding: "1rem" }}>Loading inventory...</div>
       ) : error ? (
         <div style={{ padding: "1rem", color: "#b91c1c" }}>{error}</div>
       ) : (
-        
         <div className="inventory-list">
           {items.map((it) => (
             <div key={it._id} className="item">
@@ -224,10 +80,7 @@ export default function Inventory() {
                 <button className="add" onClick={() => openEdit(it)}>
                   Edit
                 </button>
-                <button
-                  className="remove"
-                  onClick={() => openDeleteConfirm(it)}
-                >
+                <button className="remove" onClick={() => openDelete(it)}>
                   Remove
                 </button>
               </div>
@@ -238,66 +91,79 @@ export default function Inventory() {
           )}
         </div>
       )}
-      {/* Add new Item */}
-      {showModal && (
+
+      {/* Create */}
+      {createOpen && (
         <div
           className="modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeModal();
-          }}
+          onClick={(e) => e.target === e.currentTarget && closeCreate()}
         >
-          <div className="modal">
+          <div className="modal" role="dialog" aria-modal="true">
             <h2>Add New Item</h2>
-            <p>Scan barcode or manually enter details:</p>
-            <form onSubmit={handleSubmit}>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                required
-                placeholder="Item Name"
-              />
-              <input
-                name="quantity"
-                type="number"
-                value={form.quantity}
-                onChange={handleChange}
-                required
-                placeholder="Stock Quantity"
-              />
-              <input
-                name="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.price}
-                onChange={handleChange}
-                placeholder="Price Per Unit"
-              />
-              <select
-                name="unit"
-                value={form.unit}
-                onChange={handleChange}
-                required
-              >
-                <option value="" disabled>
-                  Unit Type
-                </option>
-                {unitOptions.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
+            <form onSubmit={create}>
+              <label>
+                Item Name
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={onFormChange}
+                  required
+                  placeholder="Enter Item Name"
+                />
+              </label>
+              <label>
+                Quantity
+                <input
+                  name="quantity"
+                  type="number"
+                  value={form.quantity}
+                  onChange={onFormChange}
+                  required
+                  placeholder="Enter Stock Quantity"
+                />
+              </label>
+              <label>
+                Price per Unit
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.price}
+                  onChange={onFormChange}
+                  placeholder="Price Per Unit"
+                />
+              </label>
+              <label>
+                Unit
+                <select
+                  name="unit"
+                  value={form.unit}
+                  onChange={onFormChange}
+                  required
+                >
+                  <option value="" disabled>
+                    Select Unit Type
                   </option>
-                ))}
-              </select>
-              <input
-                name="lowStockThreshold"
-                type="number"
-                min="0"
-                step="1"
-                value={form.lowStockThreshold}
-                onChange={handleChange}
-                placeholder="Insert Quantity for Low Supply Alert"
-              />
+                  {unitOptions.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Min. Quantity for Low Supply Alert
+                <input
+                  name="lowStockThreshold"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.lowStockThreshold}
+                  onChange={onFormChange}
+                  placeholder="Insert Quantity for Low Supply Alert"
+                />
+              </label>
               <div className="modal-actions">
                 <button type="submit" className="primary">
                   Add Item
@@ -305,7 +171,7 @@ export default function Inventory() {
                 <button
                   type="button"
                   className="secondary"
-                  onClick={closeModal}
+                  onClick={closeCreate}
                 >
                   Cancel
                 </button>
@@ -314,74 +180,78 @@ export default function Inventory() {
           </div>
         </div>
       )}
-      {/* Edit Inventory Modal */}
-      {showEdit && (
+
+      {/* Edit */}
+      {editOpen && (
         <div
           className="modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeEdit();
-          }}
+          onClick={(e) => e.target === e.currentTarget && closeEdit()}
         >
-          <div className="modal">
+          <div className="modal" role="dialog" aria-modal="true">
             <h2>Edit Item</h2>
-            <form onSubmit={handleUpdate}>
-              <label>Item Name
+            <form onSubmit={update}>
+              <label>
+                Item Name
                 <input
                   name="name"
                   value={editForm.name}
-                  onChange={handleEditChange}
+                  onChange={onEditFormChange}
                   required
                   placeholder="Item Name"
                 />
               </label>
-              <label>Quantity
-              <input
-                name="quantity"
-                type="number"
-                value={editForm.quantity}
-                onChange={handleEditChange}
-                required
-                placeholder="Stock Quantity"
-              />
+              <label>
+                Quantity
+                <input
+                  name="quantity"
+                  type="number"
+                  value={editForm.quantity}
+                  onChange={onEditFormChange}
+                  required
+                  placeholder="Stock Quantity"
+                />
               </label>
-              <label>Price per Unit
-              <input
-                name="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={editForm.price}
-                onChange={handleEditChange}
-                placeholder="Price Per Unit"
-              />
+              <label>
+                Price per Unit
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editForm.price}
+                  onChange={onEditFormChange}
+                  placeholder="Price Per Unit"
+                />
               </label>
-              <label>Unit
-              <select
-                name="unit"
-                value={editForm.unit}
-                onChange={handleEditChange}
-                required
-              >
-                <option value="" disabled>
-                  Unit Type
-                </option>
-                {unitOptions.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
+              <label>
+                Unit
+                <select
+                  name="unit"
+                  value={editForm.unit}
+                  onChange={onEditFormChange}
+                  required
+                >
+                  <option value="" disabled>
+                    Unit Type
                   </option>
-                ))}
-              </select>
+                  {unitOptions.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
               </label>
-              <label>Min. Quantity for Low Supply Alert
-              <input
-                name="lowStockThreshold"
-                type="number"
-                min="0"
-                step="1"
-                value={editForm.lowStockThreshold}
-                onChange={handleEditChange}
-                placeholder="Insert Quantity for Low Supply Alert"
-              />
+              <label>
+                Min. Quantity for Low Supply Alert
+                <input
+                  name="lowStockThreshold"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={editForm.lowStockThreshold}
+                  onChange={onEditFormChange}
+                  placeholder="Insert Quantity for Low Supply Alert"
+                />
               </label>
               <div className="modal-actions">
                 <button type="submit" className="primary">
@@ -396,25 +266,23 @@ export default function Inventory() {
         </div>
       )}
 
-      {/* Confirm Delete Modal */}
-      {showDelete && (
+      {/* Delete */}
+      {deleteOpen && (
         <div
           className="modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeDeleteConfirm();
-          }}
+          onClick={(e) => e.target === e.currentTarget && closeDelete()}
         >
-          <div className="modal">
+          <div className="modal" role="dialog" aria-modal="true">
             <h2>Confirm Deletion</h2>
             <p>
               Are you sure you want to remove{" "}
               <strong>{deleteTarget?.name}</strong>?
             </p>
             <div className="modal-actions">
-              <button className="remove" onClick={handleConfirmDelete}>
+              <button className="remove" onClick={confirmDelete}>
                 Yes, Remove
               </button>
-              <button className="secondary" onClick={closeDeleteConfirm}>
+              <button className="secondary" onClick={closeDelete}>
                 Cancel
               </button>
             </div>

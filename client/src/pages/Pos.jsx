@@ -1,30 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/pos.css";
+import { usePos } from "../hooks/usePos";
 
 export default function Pos() {
-  const [items, setItems] = useState([]);
-  const [addons, setAddons] = useState([]);
-  const [order, setOrder] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
+  const {
+    // data/meta
+    items,
+    addons,
+    loading,
+    err,
 
-  const [showConfig, setShowConfig] = useState(false);
-  const [configItem, setConfigItem] = useState(null);
-  const [configQty, setConfigQty] = useState(1);
-  const [configAddonIds, setConfigAddonIds] = useState([]);
-  const [configSize, setConfigSize] = useState("12oz");
+    // order
+    order,
+    total,
+    removeFromOrder,
+
+    // config modal
+    showConfig,
+    configItem,
+    configQty,
+    setConfigQty,
+    configAddonIds,
+    configSize,
+    setConfigSize,
+    openConfig,
+    closeConfig,
+    selectableAddons,
+    toggleAddon,
+    addConfiguredLine,
+
+    // utils
+    moneyPHP,
+
+    // checkout
+    buildCheckoutState,
+
+    // tabs
+    activeTab,
+    setActiveTab,
+    categoryOptions,
+    filteredItems,
+  } = usePos();
 
   const navigate = useNavigate();
 
-  const formatPHP = (n) =>
-    typeof n === "number"
-      ? new Intl.NumberFormat("en-PH", {
-          style: "currency",
-          currency: "PHP",
-        }).format(n)
-      : "—";
-
+  // purely visual mapping stays in component (UI concern)
   const shapeClass = (cat) => {
     switch (cat) {
       case "Drinks":
@@ -38,179 +58,63 @@ export default function Pos() {
     }
   };
 
-  useEffect(() => {
-    const abort = new AbortController();
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/menu-items", {
-          credentials: "include",
-          signal: abort.signal,
-        });
-        if (!res.ok) throw new Error("Failed to load menu");
-        const data = await res.json();
-        setItems(data);
-      } catch (e) {
-        if (e.name !== "AbortError") setErr("Could not load menu items");
-      } finally {
-        setLoading(false);
-      }
-    })();
-    return () => abort.abort();
-  }, []);
-
-  useEffect(() => {
-    const abort = new AbortController();
-    (async () => {
-      try {
-        const res = await fetch(
-          "http://localhost:5000/api/addons?active=true",
-          {
-            credentials: "include",
-            signal: abort.signal,
-          }
-        );
-        if (!res.ok) throw new Error("Failed to load add-ons");
-        const data = await res.json();
-        setAddons(data || []);
-      } catch (e) {
-        if (e.name !== "AbortError") console.error(e);
-      }
-    })();
-    return () => abort.abort();
-  }, []);
-
-  const openConfig = (it) => {
-    const avail = Boolean(
-      it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true))
-    );
-    if (!avail) return;
-
-    setConfigItem(it);
-    setConfigQty(1);
-    setConfigAddonIds([]);
-    setConfigSize("12oz");
-    setShowConfig(true);
-  };
-
-  const closeConfig = () => setShowConfig(false);
-
-  const selectableAddons = useMemo(() => {
-    if (!configItem) return [];
-    let list = addons.filter((a) => a.active !== false);
-    if (configItem.category) {
-      list = list.filter((a) => a.category === configItem.category);
-    }
-
-    const allowed = (configItem.allowedAddOns || []).map(String);
-    if (allowed.length > 0) {
-      list = list.filter((a) => allowed.includes(String(a._id)));
-    }
-    return list;
-  }, [addons, configItem]);
-
-  const toggleAddon = (id) => {
-    setConfigAddonIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const addConfiguredLine = () => {
-    if (!configItem) return;
-
-    const chosen = selectableAddons.filter((a) =>
-      configAddonIds.includes(String(a._id))
-    );
-
-    const isDrink = (configItem.category || "").toLowerCase() === "drinks";
-    const basePrice = isDrink
-      ? (configSize === "16oz"
-          ? Number(configItem.sizePrices?.oz16) || 0
-          : Number(configItem.sizePrices?.oz12) || 0)
-      : Number(configItem.price) || 0;
-
-    const line = {
-      lineId:
-        window.crypto && crypto.randomUUID
-          ? crypto.randomUUID()
-          : String(Date.now() + Math.random()),
-      menuItemId: configItem._id,
-      name: configItem.name,
-      category: configItem.category,
-      size: isDrink ? configSize : undefined,  
-      basePrice,
-      quantity: Number(configQty) || 1,
-      addons: chosen.map((a) => ({
-        _id: a._id,
-        name: a.name,
-        price: Number(a.price) || 0,
-      })),
-    };
-
-    setOrder((prev) => [...prev, line]);
-    setShowConfig(false);
-  };
-
-  const removeFromOrder = (lineId) => {
-    setOrder((prev) => prev.filter((line) => line.lineId !== lineId));
-  };
-
-  const total = useMemo(() => {
-    return order.reduce((sum, li) => {
-      const addonsTotal = (li.addons || []).reduce(
-        (s, a) => s + (a.price || 0),
-        0
-      );
-      return sum + (li.basePrice + addonsTotal) * (li.quantity || 1);
-    }, 0);
-  }, [order]);
-
   const goToCheckout = () => {
-    const itemsPayload = order.map((li) => ({
-      menuItem: li.menuItemId,
-      quantity: li.quantity,
-      addons: (li.addons || []).map((a) => a._id),
-      size: li.size,
-    }));
-    const state = { order, itemsPayload, total };
+    const state = buildCheckoutState();
     localStorage.setItem("posOrder", JSON.stringify(state));
     navigate("/pos/checkout", { state });
   };
-
 
   return (
     <div className="pos-container">
       <div className="products-container">
         <h2>Product Selection</h2>
+        <div className="menu-category">
+          {categoryOptions.map((tab) => (
+            <button
+              key={tab}
+              className={`category-button ${activeTab === tab ? "active" : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
         {loading ? (
           <div style={{ padding: "1rem" }}>Loading menu…</div>
         ) : err ? (
           <div style={{ padding: "1rem", color: "#b91c1c" }}>{err}</div>
         ) : (
           <div className="product-list">
-            {items.map((it) => {
+            {filteredItems.map((it) => {
               const isAvailable = Boolean(
-                it.effectiveAvailable ?? ((it.available ?? true) && (it.availableComputed ?? true))
+                it.effectiveAvailable ??
+                  ((it.available ?? true) && (it.availableComputed ?? true))
               );
               const disabled = !isAvailable;
 
               return (
                 <div
                   key={it._id}
-                  className={`product ${disabled ? "is-unavailable" : "is-available"}`}
+                  className={`product ${
+                    disabled ? "is-unavailable" : "is-available"
+                  }`}
                   role="button"
                   tabIndex={disabled ? -1 : 0}
                   aria-disabled={disabled}
                   onClick={() => openConfig(it)}
                   onKeyDown={(e) => {
-                    if (!disabled && (e.key === "Enter" || e.key === " ")) openConfig(it);
+                    if (!disabled && (e.key === "Enter" || e.key === " "))
+                      openConfig(it);
                   }}
                 >
                   <div className={shapeClass(it.category)} />
                   <p className="name">{it.name}</p>
                   <h4 className="price">
-                    {((it.category || "").toLowerCase() === "drinks")
-                      ? `${formatPHP(Number(it.sizePrices?.oz12 ?? 0))} / ${formatPHP(Number(it.sizePrices?.oz16 ?? 0))}`
-                      : formatPHP(Number(it.price) || 0)}
+                    {(it.category || "").toLowerCase() === "drinks"
+                      ? `${moneyPHP(
+                          Number(it.sizePrices?.oz12 ?? 0)
+                        )} / ${moneyPHP(Number(it.sizePrices?.oz16 ?? 0))}`
+                      : moneyPHP(Number(it.price) || 0)}
                   </h4>
                   <small className={`availability ${disabled ? "na" : "ok"}`}>
                     {disabled ? "Not Available" : "Available"}
@@ -218,7 +122,7 @@ export default function Pos() {
                 </div>
               );
             })}
-            {items.length === 0 && (
+            {filteredItems.length === 0 && (
               <div style={{ padding: "1rem" }}>No items yet.</div>
             )}
           </div>
@@ -237,9 +141,10 @@ export default function Pos() {
               <div key={li.lineId} className="ordered-item">
                 <div className="order-name-qty">
                   <p>
-                    {li.name}{li.size ? ` (${li.size})` : ""} x{li.quantity}
+                    {li.name}
+                    {li.size ? ` (${li.size})` : ""} x{li.quantity}
                   </p>
-                  <p>{formatPHP(lineTotal)}</p>
+                  <p>{moneyPHP(lineTotal)}</p>
                 </div>
                 <div
                   onClick={() => removeFromOrder(li.lineId)}
@@ -253,15 +158,15 @@ export default function Pos() {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M14.5833 1.04167H10.9375L9.89583 0H4.6875L3.64583 1.04167H0V3.125H14.5833M1.04167 16.6667C1.04167 17.2192 1.26116 17.7491 1.65186 18.1398C2.04256 18.5305 2.57247 18.75 3.125 18.75H11.4583C12.0109 18.75 12.5408 18.5305 12.9315 18.1398C13.3222 17.7491 13.5417 17.2192 13.5417 16.6667V4.16667H1.04167V16.6667Z"
+                      d="M14.5833 1.04167H10.9375L9.89583 0H4.6875L3.64583 1.04167H0V3.125H14.5833M1.04167 16.6667C1.04167 17.2192 1.26116 17.7491 1.65186 18.1398C2.04256 18.5305 2.57247 18.75 3.125 18.75H11.4583C12.0109 18.75 12.5408 18.5305 12.9315 18.1398C13.3222 17.7491 13.5417 17.2191 13.5417 16.6667V4.16667H1.04167V16.6667Z"
                       fill="#FF4D4D"
                     />
                   </svg>
                 </div>
-                {li.addons && li.addons.length > 0 && (
+                {li.addons?.length > 0 && (
                   <div className="order-addons">
-                    {li.addons.map((a, index) => (
-                      <small key={index}>+ {a.name}</small>
+                    {li.addons.map((a, idx) => (
+                      <small key={idx}>+ {a.name}</small>
                     ))}
                   </div>
                 )}
@@ -272,7 +177,7 @@ export default function Pos() {
 
         <div className="total">
           <h4>Total</h4>
-          <h4>{formatPHP(total)}</h4>
+          <h4>{moneyPHP(total)}</h4>
         </div>
 
         <button
@@ -288,12 +193,11 @@ export default function Pos() {
       {showConfig && configItem && (
         <div
           className="modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeConfig();
-          }}
+          onClick={(e) => e.target === e.currentTarget && closeConfig()}
         >
-          <div className="modal-order">
+          <div className="modal-order" onClick={(e) => e.stopPropagation()}>
             <h2>{configItem.name}</h2>
+
             {(configItem.category || "").toLowerCase() === "drinks" && (
               <div className="modal-order-size">
                 <label>Size</label>
@@ -321,8 +225,9 @@ export default function Pos() {
                 </div>
               </div>
             )}
+
             <div className="modal-order-qty">
-              <label>Quantity</label>
+              <p>Quantity</p>
               <input
                 type="number"
                 min="1"
@@ -344,7 +249,7 @@ export default function Pos() {
                         checked={configAddonIds.includes(id)}
                         onChange={() => toggleAddon(id)}
                       />
-                      {a.name} ({formatPHP(Number(a.price) || 0)})
+                      {a.name} ({moneyPHP(Number(a.price) || 0)})
                     </label>
                   );
                 })}

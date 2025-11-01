@@ -17,6 +17,10 @@ body { margin: 0; }
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --sb-track: #f1f5f9;
+  --sb-thumb: #cbd5e1;
+  --sb-thumb-hover: #94a3b8;
 }
 body {
   margin: 0;
@@ -36,10 +40,29 @@ h2, h4{
 button{
   font-family: Poppins, sans-serif;
   background-color: #2563EB;
+  cursor: pointer;
 }
 
 input{
   color: black;
 }
+input[type="text"]:focus, input[type="password"]:focus input[type="email"]:focus{
+  border: none;
+}
+input[type="checkbox"],
+input[type="radio"]{
+  accent-color: #2563EB;
+  width: 0.8rem;
+  height: 0.8rem;
+  cursor: pointer;
+}
 
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible{
+  outline: 2px solid #2563EB;
+}
 
+.modal label{
+  font-size: 0.8rem;
+  color: #777777;
+}

@@ -1,17 +1,20 @@
 import mongoose from 'mongoose';
 
+const q3 = n => { const x = Number(n); return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 1_000) / 1_000 : 0; };
+const q2 = n => { const x = Number(n); return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : 0; };
+
 const SizePricesSchema = new mongoose.Schema(
-  { oz12: { type: Number, min: 0 }, oz16: { type: Number, min: 0 } },
+  { oz12: { type: Number, min: 0, set: q2 }, oz16: { type: Number, min: 0, set: q2 } },
   { _id: false }
 );
 
 const RecipeEntrySchema = new mongoose.Schema(
   {
     ingredient: { type: mongoose.Schema.Types.ObjectId, ref: 'Inventory', required: true },
-    qtyPerUnit: { type: Number, min: 0, default: 1 },
+    qtyPerUnit: { type: Number, min: 0, default: 0, set: q3 },
     perSize: {
-      oz12: { type: Number, min: 0 },
-      oz16: { type: Number, min: 0 },
+      oz12: { type: Number, min: 0, set: q3 },
+      oz16: { type: Number, min: 0, set: q3 },
     },
   },
   { _id: false }

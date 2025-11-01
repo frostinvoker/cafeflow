@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "../styles/Analytics.css";
 
 import { Line, Bar } from "react-chartjs-2";
@@ -14,6 +14,9 @@ import {
 } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
 
+import { useAnalytics } from "../hooks/useAnalytics"; // <-- new hook
+
+// Register once here
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -25,161 +28,23 @@ ChartJS.register(
   BarElement
 );
 
-const API = "http://localhost:5000/api";
-const PERIODS = [
-  { label: "Last 30 Days", days: 30 },
-  { label: "Last Year", days: 365 },
-];
-
-// Currency formatter for PHP
-const formatCurrency = (n) =>
-  new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    maximumFractionDigits: 0,
-  }).format(Number(n) || 0);
-function buildCategoryChart(category) {
-  const items = (category?.items ?? []).slice(0, 5);
-
-  
-  const totalOrders = items.reduce((a, b) => a + (b?.orderCount ?? 0), 0);
-  const totalQty = items.reduce((a, b) => a + (b?.quantity ?? 0), 0);
-
-  const labels = items.map((it) => it?.name ?? "");
-  const qty = items.map((it) => it?.quantity ?? 0);
-  const pct = items.map((it, idx) => {
-    if (totalOrders > 0) {
-      return ((it?.orderCount ?? 0) / totalOrders) * 100;
-    }
-    
-    return totalQty > 0 ? (qty[idx] / totalQty) * 100 : 0;
-  });
-
-  return { labels, qty, pct, items };
-}
 export default function Analytics() {
-  const [sales, setSales] = useState([]);
-  const [best, setBest] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
-  const [period, setPeriod] = useState(PERIODS[0]);
+  const {
+    loading,
+    err,
+    setErr,
+    PERIODS,
+    period,
+    setPeriod,
+    chartData,
+    chartOptions,
+    best,
+    buildCategoryChart,
+    fmtPHP,
+  } = useAnalytics();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setErr("");
-      try {
-        const [sRes, bRes] = await Promise.all([
-          fetch(`${API}/admin/analytics/sales-trend?days=${period.days}`, {
-            credentials: "include",
-          }),
-          fetch(
-            `${API}/admin/analytics/best-sellers?limit=5&days=${period.days}`,
-            { credentials: "include" }
-          ),
-        ]);
-        if (!sRes.ok) throw new Error("Failed to fetch sales trend");
-        if (!bRes.ok) throw new Error("Failed to fetch best sellers");
-
-        const sData = await sRes.json();
-        const bData = await bRes.json();
-        if (!cancelled) {
-          setSales(sData || []);
-          setBest(bData || []);
-        }
-      } catch (e) {
-        if (!cancelled) setErr(e.message || "Failed to load analytics");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [period.days]);
-
-  // Chart.js config
-  const STANDARD_MAX = 30000;
-  const Y_STEP = 5000;
-  const labels = sales.map((s) =>
-    new Date(s.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    })
-  );
-  const values = sales.map((s) => Number(s.total || 0));
-
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: "Sales",
-        data: values,
-        borderColor: "#006599",
-        backgroundColor: "rgba(0,101,153,.12)",
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        borderWidth: 2,
-        tension: 0.3,
-        fill: true,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: { padding: { top: 8, right: 12, left: 8, bottom: 18 } },
-    interaction: { mode: "nearest", intersect: false },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          title: (items) => items[0]?.label || "",
-          label: (ctx) => `Sales: ${formatCurrency(ctx.parsed.y)}`,
-        },
-      },
-      annotation: {
-        annotations: {
-          standardLine: {
-            type: "line",
-            yMin: STANDARD_MAX,
-            yMax: STANDARD_MAX,
-            borderColor: "#ff6347",
-            borderDash: [6, 6],
-            borderWidth: 1.5,
-            label: {
-              display: true,
-              content: `Standard ${formatCurrency(STANDARD_MAX)}`,
-              position: "start",
-              backgroundColor: "transparent",
-              color: "#ff6347",
-              font: { weight: "bold" },
-              padding: 0,
-            },
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: { color: "#e9ecef" },
-        ticks: {
-          autoSkip: false,
-          maxRotation: 0, },
-      },
-      y: {
-        min: 0,
-        max: STANDARD_MAX, 
-        grid: { color: "#e9ecef" },
-        ticks: {
-          stepSize: Y_STEP, 
-          callback: (v) => formatCurrency(v),
-        },
-      },
-    },
-  };
+  // optional: clear error on unmount to avoid stale toasts
+  useEffect(() => () => setErr(""), [setErr]);
 
   return (
     <div className="default-container analytics-container">
@@ -215,12 +80,11 @@ export default function Analytics() {
                 </select>
               </div>
 
-              {sales.length === 0 ? (
+              {!chartData.labels?.length ? (
                 <div className="empty">No sales data</div>
               ) : (
                 <div className="sales-list">
                   <div className="graph-container">
-                    {/* Chart.js canvas */}
                     <div
                       style={{
                         position: "relative",
@@ -267,8 +131,8 @@ export default function Analytics() {
                                       backgroundColor: "rgba(0,101,153,0.30)",
                                       borderColor: "#006599",
                                       borderWidth: 1,
-                                      barPercentage: 0.7,      
-                                      categoryPercentage: 0.7, 
+                                      barPercentage: 0.7,
+                                      categoryPercentage: 0.7,
                                     },
                                   ],
                                 }}
@@ -294,9 +158,7 @@ export default function Analytics() {
                                           ];
                                           if (it?.revenue != null) {
                                             lines.push(
-                                              `Revenue: ${formatCurrency(
-                                                it.revenue
-                                              )}`
+                                              `Revenue: ${fmtPHP(it.revenue)}`
                                             );
                                           }
                                           return lines;
@@ -321,8 +183,10 @@ export default function Analytics() {
                                         maxTicksLimit: 0,
                                         font: { size: 11 },
                                         callback: (value, idx) => {
-                                            const label = cfg.labels[idx] ?? "";
-                                            return label.length > 14 ? label.slice(0, 14) + "…" : label;
+                                          const label = cfg.labels[idx] ?? "";
+                                          return label.length > 14
+                                            ? label.slice(0, 14) + "…"
+                                            : label;
                                         },
                                       },
                                     },

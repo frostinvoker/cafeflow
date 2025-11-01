@@ -20,4 +20,9 @@ UserSchema.methods.validatePassword = async function (password) {
   return bcrypt.compare(password, this.passwordHash);
 };
 
+UserSchema.methods.checkStrength = async function (password){
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
+  return strongPasswordRegex.test(password);
+};
+
 export default mongoose.model("User", UserSchema);

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import "../../styles/Checkout.css";
+import { useCheckout } from "../../hooks/useCheckout";
 
 export default function Checkout() {
   const location = useLocation();
@@ -10,150 +11,46 @@ export default function Checkout() {
     location.state ||
     JSON.parse(localStorage.getItem("posOrder") || "null") ||
     {};
-  const [order, setOrder] = useState(initial.order || []);
-  const [itemsPayload, setItemsPayload] = useState(initial.itemsPayload || []);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [tendered, setTendered] = useState("");
-  const [change, setChange] = useState(0);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [allCustomers, setAllCustomers] = useState([]);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [customerQuery, setCustomerQuery] = useState("");
-  const [customerResults, setCustomerResults] = useState([]);
-  const [custLoading, setCustLoading] = useState(false);
-  const [showConfirmPayment, setShowConfirmPayment] = useState(false);
-  const [redeemFreeDrink, setRedeemFreeDrink] = useState(false);
 
-  const openConfirmPayment = () => setShowConfirmPayment(true);
-  const closeConfirmPayment = () => setShowConfirmPayment(false);
+  const {
+    // order / totals
+    order, total, change,
 
-  const formatPHP = (n) =>
-    typeof n === "number"
-      ? new Intl.NumberFormat("en-PH", {
-          style: "currency",
-          currency: "PHP",
-        }).format(n)
-      : "—";
+    // payment
+    paymentMethod, setPaymentMethod,
+    tendered, setTendered,
 
-  const total = useMemo(() => {
-    return (order || []).reduce((sum, li) => {
-      const addonsTotal = (li.addons || []).reduce(
-        (s, a) => s + (a.price || 0),
-        0
-      );
-      return sum + (li.basePrice + addonsTotal) * (li.quantity || 1);
-    }, 0);
-  }, [order]);
+    // customers
+    selectedCustomer, selectCustomer, clearSelectedCustomer,
+    showCustomerModal, openCustomerModal, closeCustomerModal,
+    customerQuery, setCustomerQuery,
+    customerList, custLoading,
 
-  useEffect(() => {
-    const changeAmount = Math.max(0, Number(tendered) - total);
-    setChange(changeAmount);
-  }, [tendered, total]);
+    // confirm modal
+    showConfirmPayment, openConfirmPayment, closeConfirmPayment,
 
-  const confirmPayment = async () => {
+    // loyalty
+    canRedeem, redeemFreeDrink, setRedeemFreeDrink,
+    pointsEarned, earnToShow,
+
+    // actions
+    confirmPayment,
+
+    // utils
+    moneyPHP,
+  } = useCheckout(initial);
+
+  // optional: focus behavior or cleanup
+  useEffect(() => {}, []);
+
+  async function handleConfirm() {
     try {
-      const body = {
-        items: itemsPayload,
-        paymentMethod,
-        payment: {
-          tendered: Number(tendered) || 0,
-          referenceId: paymentMethod === "gcash" ? `GCASH-${Date.now()}` : "",
-        },
-        status: "completed",
-        customer: selectedCustomer?._id || undefined,
-        redeemFreeDrink: canRedeem && redeemFreeDrink,
-      };
-
-      const res = await fetch("http://localhost:5000/api/checkouts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-      const created = await res.json();
-      if (!res.ok)
-        throw new Error(created?.message || "Failed to create checkout");
-
-      localStorage.removeItem("posOrder");
-
-      navigate(`/pos/checkout/receipt/${created._id}`);
+      const id = await confirmPayment();
+      if (id) navigate(`/pos/checkout/receipt/${id}`);
     } catch (e) {
-      alert(e.message || "Payment failed");
+      alert(e.message);
     }
-  };
-  useEffect(() => {
-    if (!showCustomerModal) return;
-
-    const ctrl = new AbortController();
-    const t = setTimeout(async () => {
-      try {
-        setCustLoading(true);
-        const url = customerQuery.trim()
-          ? `http://localhost:5000/api/customers?q=${encodeURIComponent(
-              customerQuery
-            )}`
-          : `http://localhost:5000/api/customers`;
-
-        const res = await fetch(url, {
-          credentials: "include",
-          signal: ctrl.signal,
-        });
-        if (!res.ok) return;
-
-        const data = await res.json();
-        if (customerQuery.trim()) {
-          setCustomerResults(data);
-        } else {
-          setAllCustomers(data);
-          setCustomerResults([]);
-        }
-      } finally {
-        setCustLoading(false);
-      }
-    }, 250);
-
-    return () => {
-      clearTimeout(t);
-      ctrl.abort();
-    };
-  }, [showCustomerModal, customerQuery]);
-
-  const pointsEarned = useMemo(() => Math.floor(total * 0.1), [total]);
-  const isSingleDrink = useMemo(() => {
-    if ((order?.length || 0) !== 1) return false;
-    const cat = (order[0]?.category || "").toLowerCase();
-    return ["drink", "drinks", "beverage", "beverages"].includes(cat);
-  }, [order]);
-  const canRedeem =
-    !!selectedCustomer &&
-    (selectedCustomer.loyaltyPoints ?? 0) >= 100 &&
-    isSingleDrink;
-
-  const earnToShow = redeemFreeDrink ? 0 : pointsEarned;
-
-  useEffect(() => {
-    localStorage.setItem(
-      "posOrder",
-      JSON.stringify({
-        order,
-        itemsPayload,
-        total,
-        selectedCustomerId: selectedCustomer?._id || null,
-      })
-    );
-  }, [order, itemsPayload, total, selectedCustomer]);
-  useEffect(() => {
-    if ((itemsPayload || []).length || (order || []).length === 0) return;
-
-    
-    const built = (order || []).map((li) => ({
-      menuItem: li.menuItemId || li._id, 
-      quantity: Number(li.quantity) || 1,
-      size: li.size || undefined, // only for drinks
-      addons: (li.addons || []).map((a) => a._id || a.addonId).filter(Boolean),
-    }));
-    setItemsPayload(built);
-  }, [order, itemsPayload]);
+  }
 
   return (
     <div className="default-container">
@@ -174,9 +71,9 @@ export default function Checkout() {
                       {li.name}
                       {li.size ? ` (${li.size})` : ""} x{li.quantity}
                     </p>
-                    <p>{formatPHP(lineTotal)}</p>
+                    <p>{moneyPHP(lineTotal)}</p>
                   </div>
-                  {li.addons && li.addons.length > 0 && (
+                  {li.addons?.length > 0 && (
                     <div className="order-addons">
                       {li.addons.map((a, index) => (
                         <small key={index}>+ {a.name}</small>
@@ -186,13 +83,11 @@ export default function Checkout() {
                 </div>
               );
             })}
-            {order.length === 0 && (
-              <div style={{ padding: ".5rem" }}>No items.</div>
-            )}
+            {order.length === 0 && <div style={{ padding: ".5rem" }}>No items.</div>}
           </div>
           <div className="total">
             <h2>Total</h2>
-            <h2>{formatPHP(total)}</h2>
+            <h2>{moneyPHP(total)}</h2>
           </div>
         </div>
 
@@ -235,10 +130,11 @@ export default function Checkout() {
               </div>
               <div className="change">
                 <p>Change: </p>
-                <h3>{formatPHP(change)}</h3>
+                <h3>{moneyPHP(change)}</h3>
               </div>
             </div>
           )}
+
           <div className="select-customer">
             <h2>Select Customer</h2>
 
@@ -247,16 +143,13 @@ export default function Checkout() {
                 <div className="selected-customer-line">
                   <strong>{selectedCustomer.name}</strong>
                   <small>
-                    current pts:{" "}
-                    <strong>{selectedCustomer.loyaltyPoints ?? 0}</strong> pts
+                    current pts: <strong>{selectedCustomer.loyaltyPoints ?? 0}</strong> pts
                   </small>
                 </div>
 
                 <div className="selected-customer-line">
                   {canRedeem && (
-                    <label
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
+                    <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <input
                         type="checkbox"
                         checked={redeemFreeDrink}
@@ -265,33 +158,20 @@ export default function Checkout() {
                       Redeem free drink (100 pts)
                     </label>
                   )}
-                  <small>
-                    will earn <strong>{earnToShow}</strong> pts
-                  </small>
+                  <small>will earn <strong>{earnToShow}</strong> pts</small>
                 </div>
 
-                <button
-                  className="remove"
-                  onClick={() => {
-                    setSelectedCustomer(null);
-                    setRedeemFreeDrink(false);
-                  }}
-                >
+                <button className="remove" onClick={clearSelectedCustomer}>
                   Clear
                 </button>
               </div>
             ) : (
               <>
                 <small>No customer selected</small>
-
                 <button
                   type="button"
                   className="customer-picker-btn"
-                  onClick={() => {
-                    setShowCustomerModal(true);
-                    setCustomerQuery("");
-                    setCustomerResults([]);
-                  }}
+                  onClick={openCustomerModal}
                   style={{ marginTop: 8 }}
                 >
                   Select customer
@@ -300,11 +180,7 @@ export default function Checkout() {
             )}
           </div>
 
-          <button
-            className="long-button"
-            onClick={openConfirmPayment}
-            disabled={order.length === 0}
-          >
+          <button className="long-button" onClick={openConfirmPayment} disabled={order.length === 0}>
             Confirm Payment
           </button>
           <button className="cancel-button" onClick={() => navigate(-1)}>
@@ -312,37 +188,25 @@ export default function Checkout() {
           </button>
         </div>
       </div>
+
+      {/* Confirm Payment Modal */}
       {showConfirmPayment && (
-        <div
-          className="modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeConfirmPayment();
-          }}
-        >
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeConfirmPayment()}>
           <div className="modal">
             <h2>Confirm Payment</h2>
-            <p>
-              Are you sure you want to <strong>confirm</strong> the payment?
-            </p>
+            <p>Are you sure you want to <strong>confirm</strong> the payment?</p>
             <div className="modal-actions">
-              <button className="confirm" onClick={confirmPayment}>
-                Confirm
-              </button>
-              <button className="secondary" onClick={closeConfirmPayment}>
-                Cancel
-              </button>
+              <button className="confirm" onClick={handleConfirm}>Confirm</button>
+              <button className="secondary" onClick={closeConfirmPayment}>Cancel</button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Customer Picker Modal */}
       {showCustomerModal && (
-        <div
-          className="modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowCustomerModal(false);
-          }}
-        >
-          <div className="modal customer-picker-modal">
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeCustomerModal()}>
+          <div className="modal customer-picker-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Select Customer</h2>
 
             <input
@@ -354,69 +218,33 @@ export default function Checkout() {
             />
 
             <div className="customer-grid">
-              {custLoading && (
-                <div className="muted" style={{ padding: "8px" }}>
-                  Loading…
-                </div>
+              {custLoading && <div className="muted" style={{ padding: 8 }}>Loading…</div>}
+              {!custLoading && !customerQuery.trim() && customerList.length === 0 && (
+                <div className="muted" style={{ padding: 8 }}>No customers yet</div>
               )}
-              {!custLoading &&
-                !customerQuery.trim() &&
-                allCustomers.length === 0 && (
-                  <div className="muted" style={{ padding: "8px" }}>
-                    No customers yet
-                  </div>
-                )}
-              {!custLoading &&
-                customerQuery.trim() &&
-                customerResults.length === 0 && (
-                  <div className="muted" style={{ padding: "8px" }}>
-                    No matches
-                  </div>
-                )}
+              {!custLoading && customerQuery.trim() && customerList.length === 0 && (
+                <div className="muted" style={{ padding: 8 }}>No matches</div>
+              )}
 
-              {(customerQuery.trim() ? customerResults : allCustomers).map(
-                (c) => (
-                  <div
-                    key={c._id}
-                    role="button"
-                    className="customer-card"
-                    onClick={() => {
-                      setSelectedCustomer(c);
-                      setRedeemFreeDrink(false);
-                      setShowCustomerModal(false);
-                    }}
-                  >
-                    <div className="customer-card-title">
-                      <h3>{c.name}</h3>
-                    </div>
-                    <div className="customer-card-sub">
-                      <p>
-                        {c.email || <span className="muted">No email</span>}
-                      </p>
-                      <p>Points: {c.loyaltyPoints ?? 0} pts</p>
-                    </div>
+              {customerList.map((c) => (
+                <div
+                  key={c._id}
+                  role="button"
+                  className="customer-card"
+                  onClick={() => selectCustomer(c)}
+                >
+                  <div className="customer-card-title"><h3>{c.name}</h3></div>
+                  <div className="customer-card-sub">
+                    <p>{c.email || <span className="muted">No email</span>}</p>
+                    <p>Points: {c.loyaltyPoints ?? 0} pts</p>
                   </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
 
             <div className="modal-actions">
-              <button
-                className="remove"
-                onClick={() => {
-                  setSelectedCustomer(null);
-                  setRedeemFreeDrink(false);
-                  setShowCustomerModal(false);
-                }}
-              >
-                Select none
-              </button>
-              <button
-                className="secondary"
-                onClick={() => setShowCustomerModal(false)}
-              >
-                Close
-              </button>
+              <button className="remove" onClick={clearSelectedCustomer}>Select none</button>
+              <button className="secondary" onClick={closeCustomerModal}>Close</button>
             </div>
           </div>
         </div>

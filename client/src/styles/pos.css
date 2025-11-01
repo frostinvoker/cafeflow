@@ -199,8 +199,9 @@
 }
 .modal-order .modal-order-qty{
     width: 100%;
-    display: inline-flex;
+    display: flex;
     gap: 1em;
+    align-items: baseline;
 }
 
 .modal-order .modal-order-qty input{

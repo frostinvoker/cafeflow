@@ -1,0 +1,127 @@
+/* styles/PrintableReceipt.css */
+
+/* Screen preview */
+.print-receipt {
+  width: 100%;
+  max-width: 80mm; /* preview matches print width */
+  margin: 16px auto;
+  padding: 8px 6px;
+  background: #fff;
+  color: #111;
+  line-height: 1.25;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+.print-receipt.loading,
+.print-receipt.error {
+  text-align: center;
+  padding: 16px;
+}
+
+.rcpt-store {
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+.rcpt-sub {
+  text-align: center;
+  font-size: 10px;
+  color: #6b7280;
+}
+.rcpt-meta {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #374151;
+  text-align: center;
+}
+.rcpt-sep {
+  border-top: 1px dashed #9ca3af;
+  margin: 8px 0;
+}
+
+.rcpt-items .rcpt-line {
+  page-break-inside: avoid;
+  margin: 4px 0;
+}
+.line-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.addons {
+  padding-left: 8px;
+  color: #6b7280;
+  font-size: 10px;
+  display: grid;
+}
+
+.rcpt-totals .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  margin: 2px 0;
+}
+.rcpt-footer {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.screen-actions {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.screen-actions button {
+  padding: 6px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+/* Print rules */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-receipt {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 6mm 4mm !important;
+    font-size: 11px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .rcpt-store {
+    font-size: 12px !important;
+  }
+  .line-top {
+    font-size: 11px !important;
+  }
+  .addons {
+    font-size: 10px !important;
+  }
+  .rcpt-totals .row {
+    font-size: 11px !important;
+  }
+
+  .rcpt-header,
+  .rcpt-items,
+  .rcpt-totals,
+  .rcpt-footer {
+    page-break-inside: avoid;
+  }
+
+  @page {
+    size: 80mm auto; /* thermal width, variable height */
+    margin: 4mm;
+  }
+}

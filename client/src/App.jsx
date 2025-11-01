@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import Checkout from "./components/pos/Checkout";
 import Receipt from "./components/pos/Receipt";
+import PrintableReceipt from "./components/pos/PrintableReceipt";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="pos/checkout" element={<Checkout />} />
         <Route path="pos/checkout/receipt" element={<Receipt />} />
         <Route path="/pos/checkout/receipt/:checkoutId" element={<Receipt />} />
+        <Route path="/pos/checkout/receipt/print/:checkoutId" element={<PrintableReceipt />} />
         <Route path="customers" element={<Customers />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="inventory" element={<Inventory />} />

@@ -1,92 +1,10 @@
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useState, useCallback, useEffect } from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import LowStockToast from "../overlay/LowStockToast";
-
 import "../../styles/Dashboard.css";
 
 export default function DashboardLayout() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [signingOut, setSigningOut] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancel = false;
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error("unauth");
-        const data = await res.json();
-        if (!cancel) {
-          setUser(data.user);
-          try {
-            localStorage.setItem("user", JSON.stringify(data.user));
-          } catch {}
-        }
-      } catch {
-        if (!cancel) navigate("/login", { replace: true });
-      } finally {
-        if (!cancel) setLoading(false);
-      }
-    })();
-    return () => {
-      cancel = true;
-    };
-  }, [navigate]);
-
-  // Restricts baristas
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === "manager") return;
-    const path = location.pathname.toLowerCase();
-    // Allowed for barista
-    const allowed = ["/pos", "/customers"];
-    const allowedPrefixes = ["/pos/checkout", "/pos/checkout/receipt"];
-    const isAllowed =
-      allowed.includes(path) || allowedPrefixes.some((p) => path.startsWith(p));
-    if (!isAllowed) {
-      navigate("/pos", { replace: true });
-    }
-  }, [user, location.pathname, navigate]);
-
-  const link = ({ isActive }) => ({
-    padding: "0.5em 0.8em",
-    textDecoration: "none",
-    borderRadius: "15px",
-    color: isActive ? "#2563EB" : "#000000",
-    background: isActive ? "#F1F5F9" : "transparent",
-  });
-
-  const handleSignOut = useCallback(
-    async (e) => {
-      e?.preventDefault?.();
-      if (signingOut) return;
-      setSigningOut(true);
-      try {
-        await fetch("http://localhost:5000/api/auth/logout", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
-      } catch {
-      } finally {
-        try {
-          localStorage.removeItem("user");
-        } catch {}
-        setSigningOut(false);
-        try {
-          navigate("/login", { replace: true });
-        } catch {
-          window.location.assign("/login");
-        }
-      }
-    },
-    [signingOut, navigate]
-  );
-
+  const { user, link, handleSignOut } = useDashboardLayout();
   return (
     <div className="dashboard">
       <div className="container">

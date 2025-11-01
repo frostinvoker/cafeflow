@@ -14,7 +14,10 @@ export async function changeMyPassword(req, res) {
     const ok = await me.validatePassword(currentPassword);
     if (!ok)
       return res.status(400).json({ message: "Current password is incorrect" });
-
+    
+    const strong = await me.checkStrength(newPassword);
+    if (!strong)
+      return res.status(400).json({ message: "New Password must be at least 8 characters long and include at least one letter, one number, and one special character." });
     await me.setPassword(newPassword);
     await me.save();
     return res.json({ message: "Password updated" });
@@ -31,7 +34,7 @@ export async function createBarista(req, res) {
 
     const exists = await User.findOne({ email });
     if (exists)
-      return res.status(409).json({ message: "Email already registered" });
+      return res.status(400).json({ message: "Email already registered" });
 
     const u = new User({ name, email, role: "barista", status: "active" });
     await u.setPassword(password);

@@ -14,7 +14,6 @@
 }
 
 .logo-container {
-  background: #DEEDF8;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -51,7 +50,8 @@
   flex-direction: column;
   justify-content: center;
   padding: 1.5em;
-  background: #ffffff;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   gap: 1em;
 }
